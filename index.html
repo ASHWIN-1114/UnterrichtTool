@@ -10,13 +10,15 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(to bottom right, #111827, #1f2937);
         }
 
         .scroll-container {
             max-height: 400px;
             overflow-y: auto;
         }
-        
+
+        /* Original animated entry for list items */
         .animated-entry {
             animation: fadeIn 0.5s ease-in-out;
         }
@@ -30,6 +32,33 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        
+        /* Staggered animation for group cards */
+        .group-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
+        .group-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar for better dark mode look */
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
         }
 
         #random-person-animation-container {
@@ -74,7 +103,7 @@
 </head>
 
 <body class="h-full">
-    <div class="flex flex-col min-h-screen items-center justify-start p-4 bg-gray-900 text-gray-300">
+    <div class="flex flex-col min-h-screen items-center justify-start p-4 text-gray-300">
         <!-- Header Section -->
         <header class="w-full text-center text-white py-4 mb-8">
             <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-2">
@@ -83,7 +112,7 @@
         </header>
 
         <!-- Main Content Container -->
-        <main class="w-full max-w-5xl bg-gray-800 rounded-3xl shadow-2xl p-6 md:p-10">
+        <main class="w-full max-w-5xl bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-6 md:p-10">
             <!-- Group Configuration and Action Buttons -->
             <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-8">
                 <div class="flex items-center gap-4">
@@ -92,17 +121,23 @@
                         class="w-20 p-2 text-center rounded-xl border-2 bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200">
                 </div>
                 <button id="split-groups-btn"
-                    class="w-full md:w-auto bg-purple-600 text-white font-bold p-4 rounded-xl shadow-lg hover:bg-purple-700 transition duration-200 ease-in-out transform hover:scale-105">
+                    class="w-full md:w-auto flex items-center justify-center bg-purple-600 text-white font-bold p-4 rounded-xl shadow-lg hover:bg-purple-700 transition duration-200 ease-in-out transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                    </svg>
                     Gruppen bilden
                 </button>
                 <button id="random-person-btn"
-                    class="w-full md:w-auto bg-purple-600 text-white font-bold p-4 rounded-xl shadow-lg hover:bg-purple-700 transition duration-200 ease-in-out transform hover:scale-105">
+                    class="w-full md:w-auto flex items-center justify-center bg-purple-600 text-white font-bold p-4 rounded-xl shadow-lg hover:bg-purple-700 transition duration-200 ease-in-out transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V4a1 1 0 011-1zm10.899 12.101a7.002 7.002 0 01-11.601-2.566 1 1 0 011.885-.666A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101z" clip-rule="evenodd" />
+                    </svg>
                     Zufällige Person auswählen
                 </button>
             </div>
             
             <!-- Groups and Random Person Display Area -->
-            <div id="results-display" class="mt-8 bg-gray-900/50 p-6 rounded-2xl shadow-inner mb-8">
+            <div id="results-display" class="mt-8 bg-black/20 border border-white/10 p-6 rounded-2xl shadow-inner mb-8">
                 <h2 class="text-2xl font-semibold mb-2 text-center text-white">Ergebnisse</h2>
                 <div id="random-person-animation-container" class="mb-4 text-center text-2xl font-bold text-white">
                     <div id="scrolling-names-list-wrapper" class="overflow-hidden w-full h-full">
@@ -120,7 +155,7 @@
             <!-- Student and Topic Input Section -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                 <!-- Student Input -->
-                <div class="bg-gray-900/50 p-6 rounded-2xl shadow-inner">
+                <div class="bg-black/20 border border-white/10 p-6 rounded-2xl shadow-inner">
                     <h2 class="text-2xl font-semibold text-center text-white">
                         Schülerinnen und Schüler 
                     </h2>
@@ -141,7 +176,7 @@
                 </div>
 
                 <!-- Topic Input -->
-                <div class="bg-gray-900/50 p-6 rounded-2xl shadow-inner">
+                <div class="bg-black/20 border border-white/10 p-6 rounded-2xl shadow-inner">
                     <h2 class="text-2xl font-semibold mb-4 text-center text-white">Themen (optional)</h2>
                     <form id="topic-form" class="flex gap-4">
                         <input type="text" id="topic-name-input" placeholder="Thema hinzufügen..."
@@ -294,7 +329,8 @@
 
             // Clear previous results
             groupsContainer.innerHTML = '';
-            randomPersonDisplay.innerHTML = '';
+            // We only need to hide the random person display, not clear its content.
+            // The random person button click will rebuild the content from scratch anyway.
             randomPersonDisplay.classList.remove('active');
 
             // Create groups
@@ -404,9 +440,11 @@
         // Display the generated groups
         function displayGroups(groups) {
             groupsContainer.innerHTML = '';
+            const groupElements = [];
+
             groups.forEach((group, index) => {
                 const groupDiv = document.createElement('div');
-                groupDiv.classList.add('bg-gray-700', 'p-6', 'rounded-2xl', 'shadow-xl', 'border-2', 'border-purple-500', 'animated-entry', 'flex', 'flex-col', 'gap-4');
+                groupDiv.classList.add('bg-gray-700/50', 'p-6', 'rounded-2xl', 'shadow-xl', 'border', 'border-white/10', 'flex', 'flex-col', 'gap-4', 'group-card');
                 
                 let topicHtml = '';
                 if (group.topic) {
@@ -421,6 +459,13 @@
                     </ul>
                 `;
                 groupsContainer.appendChild(groupDiv);
+                groupElements.push(groupDiv);
+            });
+            
+            groupElements.forEach((el, i) => {
+                setTimeout(() => {
+                    el.classList.add('visible');
+                }, i * 150);
             });
         }
 
@@ -430,6 +475,5 @@
 </body>
 
 </html>
-
 
 
