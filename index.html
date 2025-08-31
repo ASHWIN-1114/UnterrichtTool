@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gruppenorganisator für den Deutschunterricht</title>
+    <title>Unterricht Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -78,7 +78,7 @@
         <!-- Header Section -->
         <header class="w-full text-center text-white py-4 mb-8">
             <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-2">
-                Gruppenorganisator
+                Unterricht Tool
             </h1>
             <p class="text-xl md:text-2xl font-light text-gray-400">
                 Für den Deutschunterricht
@@ -86,7 +86,7 @@
         </header>
 
         <!-- Main Content Container -->
-        <main class="w-full max-w-4xl bg-gray-800 rounded-3xl shadow-2xl p-6 md:p-10">
+        <main class="w-full max-w-5xl bg-gray-800 rounded-3xl shadow-2xl p-6 md:p-10">
             <!-- Group Configuration and Action Buttons -->
             <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-8">
                 <div class="flex items-center gap-4">
@@ -369,7 +369,7 @@
             // Build the scrolling list from the duplicated array
             duplicatedNames.forEach((name, index) => {
                 const p = document.createElement('p');
-                p.classList.add('p-2', 'text-2xl', 'text-white', 'font-bold', 'mx-4', 'inline-block', 'whitespace-nowrap');
+                p.classList.add('p-2', 'text-2xl', 'text-white', 'font-bold', 'mx-4', 'inline-block', 'whitespace-nowrap', 'transition-all', 'duration-500');
                 p.textContent = name;
                 namesList.appendChild(p);
             });
@@ -377,21 +377,21 @@
             // Find the final element to get its position
             const finalElement = namesList.children[finalStudentAbsoluteIndex];
             
-            // Calculate final scroll position to center the selected name
-            const containerWidth = randomPersonDisplay.offsetWidth;
-            const finalPosition = finalElement.offsetLeft - (containerWidth / 2) + (finalElement.offsetWidth / 2);
-            
-            // Use a timeout to ensure the browser registers the initial state before applying the transform for the animation.
-            // This fixes the issue where the animation might not run on the first click.
+            // By wrapping the animation logic in a setTimeout, we force the browser to first render the new
+            // names list and calculate its dimensions. Only then do we calculate the final position and
+            // apply the animation. This robustly fixes the "first click" animation bug.
             setTimeout(() => {
+                const containerWidth = randomPersonDisplay.offsetWidth;
+                const finalPosition = finalElement.offsetLeft - (containerWidth / 2) + (finalElement.offsetWidth / 2);
+                
                 namesList.style.transition = 'transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
                 namesList.style.transform = `translateX(-${finalPosition}px)`;
-            }, 10);
+            }, 100); // A small delay is enough to ensure everything is ready.
 
 
             namesList.addEventListener('transitionend', () => {
                 randomPersonBtn.disabled = false;
-                finalElement.classList.add('bg-purple-700', 'p-2', 'rounded-lg', 'scale-110', 'transition-all', 'duration-500', 'shadow-2xl', 'shadow-purple-500/50', 'border-2', 'border-purple-400');
+                finalElement.classList.add('bg-purple-700', 'p-2', 'rounded-lg', 'scale-110', 'shadow-2xl', 'shadow-purple-500/50', 'border-2', 'border-purple-400');
             }, { once: true });
         });
 
@@ -433,4 +433,7 @@
 </body>
 
 </html>
+
+
+
 
