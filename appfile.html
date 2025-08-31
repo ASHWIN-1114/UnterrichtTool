@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-gray-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gruppenorganisator für den Deutschunterricht</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .scroll-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .animated-entry {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="h-full">
+    <div class="flex flex-col min-h-screen items-center justify-start p-4 bg-gradient-to-br from-indigo-500 to-purple-600 text-gray-900">
+        <!-- Header Section -->
+        <header class="w-full text-center text-white py-4 mb-8">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-2">
+                Gruppenorganisator
+            </h1>
+            <p class="text-xl md:text-2xl font-light">
+                Für den Deutschunterricht
+            </p>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl p-6 md:p-10">
+            <!-- Group Configuration and Action Buttons -->
+            <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-8">
+                <div class="flex items-center gap-4">
+                    <label for="num-groups" class="text-lg font-medium text-gray-700">Anzahl der Gruppen:</label>
+                    <input type="number" id="num-groups" value="2" min="2"
+                        class="w-20 p-2 text-center rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+                </div>
+                <button id="split-groups-btn"
+                    class="w-full md:w-auto bg-green-500 text-white font-bold p-4 rounded-xl shadow-lg hover:bg-green-600 transition duration-200 ease-in-out transform hover:scale-105">
+                    Gruppen bilden
+                </button>
+            </div>
+            
+            <!-- Groups Display Area -->
+            <div id="groups-display" class="mt-8 bg-gray-100 p-6 rounded-2xl shadow-inner mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-center">Erstellte Gruppen</h2>
+                <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Groups will be displayed here -->
+                </div>
+                <p id="message-box" class="mt-4 text-center text-red-500 font-semibold hidden">
+                    Bitte geben Sie eine gültige Anzahl von Gruppen ein.
+                </p>
+            </div>
+
+            <!-- Student and Topic Input Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                <!-- Student Input -->
+                <div class="bg-gray-50 p-6 rounded-2xl shadow-inner">
+                    <h2 class="text-2xl font-semibold mb-4 text-center">
+                        Schülerinnen und Schüler 
+                        <span id="student-count" class="text-lg text-gray-500 font-normal ml-2"></span>
+                    </h2>
+                    <form id="student-form" class="flex flex-col md:flex-row gap-4">
+                        <input type="text" id="student-name-input" placeholder="Name hinzufügen..."
+                            class="flex-1 p-3 rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+                        <button type="submit"
+                            class="bg-blue-600 text-white font-bold p-3 rounded-xl shadow-lg hover:bg-blue-700 transition duration-200 ease-in-out transform hover:scale-105">
+                            Hinzufügen
+                        </button>
+                    </form>
+                    <div id="students-container" class="mt-4 scroll-container">
+                        <ul id="students-list" class="space-y-2">
+                            <!-- Student list items will be inserted here -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Topic Input -->
+                <div class="bg-gray-50 p-6 rounded-2xl shadow-inner">
+                    <h2 class="text-2xl font-semibold mb-4 text-center">Themen (optional)</h2>
+                    <form id="topic-form" class="flex flex-col md:flex-row gap-4">
+                        <input type="text" id="topic-name-input" placeholder="Thema hinzufügen..."
+                            class="flex-1 p-3 rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+                        <button type="submit"
+                            class="bg-blue-600 text-white font-bold p-3 rounded-xl shadow-lg hover:bg-blue-700 transition duration-200 ease-in-out transform hover:scale-105">
+                            Hinzufügen
+                        </button>
+                    </form>
+                    <div id="topics-container" class="mt-4 scroll-container">
+                        <ul id="topics-list" class="space-y-2">
+                            <!-- Topic list items will be inserted here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Main JavaScript Logic -->
+    <script>
+        // UI elements
+        const studentForm = document.getElementById('student-form');
+        const studentInput = document.getElementById('student-name-input');
+        const studentsList = document.getElementById('students-list');
+        const studentCountDisplay = document.getElementById('student-count');
+        const topicForm = document.getElementById('topic-form');
+        const topicInput = document.getElementById('topic-name-input');
+        const topicsList = document.getElementById('topics-list');
+        const splitGroupsBtn = document.getElementById('split-groups-btn');
+        const numGroupsInput = document.getElementById('num-groups');
+        const groupsContainer = document.getElementById('groups-container');
+        const messageBox = document.getElementById('message-box');
+
+        // Data arrays to be stored in localStorage
+        let students = [];
+        let topics = [];
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('students_data', JSON.stringify(students));
+            localStorage.setItem('topics_data', JSON.stringify(topics));
+            renderStudents();
+            renderTopics();
+        }
+
+        // Load data from localStorage on app start
+        function loadData() {
+            const storedStudents = localStorage.getItem('students_data');
+            const storedTopics = localStorage.getItem('topics_data');
+            if (storedStudents) {
+                students = JSON.parse(storedStudents);
+            }
+            if (storedTopics) {
+                topics = JSON.parse(storedTopics);
+            }
+            renderStudents();
+            renderTopics();
+        }
+
+        // Render students list
+        function renderStudents() {
+            studentsList.innerHTML = '';
+            studentCountDisplay.textContent = `(${students.length} Personen)`;
+            students.forEach((student, index) => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'bg-white', 'rounded-lg', 'shadow-md', 'animated-entry');
+                li.innerHTML = `
+                    <span class="text-lg font-medium">${student}</span>
+                    <button data-index="${index}" class="remove-student-btn text-red-500 hover:text-red-700 transition duration-200">
+                        &times;
+                    </button>
+                `;
+                studentsList.appendChild(li);
+            });
+        }
+
+        // Render topics list
+        function renderTopics() {
+            topicsList.innerHTML = '';
+            topics.forEach((topic, index) => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'bg-white', 'rounded-lg', 'shadow-md', 'animated-entry');
+                li.innerHTML = `
+                    <span class="text-lg font-medium">${topic}</span>
+                    <button data-index="${index}" class="remove-topic-btn text-red-500 hover:text-red-700 transition duration-200">
+                        &times;
+                    </button>
+                `;
+                topicsList.appendChild(li);
+            });
+        }
+
+        // Event listener for adding a student
+        studentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const studentName = studentInput.value.trim();
+            if (studentName) {
+                students.push(studentName);
+                studentInput.value = '';
+                saveData();
+            }
+        });
+
+        // Event listener for adding a topic
+        topicForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const topicName = topicInput.value.trim();
+            if (topicName) {
+                topics.push(topicName);
+                topicInput.value = '';
+                saveData();
+            }
+        });
+
+        // Event listener for removing a student
+        studentsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-student-btn')) {
+                const index = e.target.dataset.index;
+                students.splice(index, 1);
+                saveData();
+            }
+        });
+
+        // Event listener for removing a topic
+        topicsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-topic-btn')) {
+                const index = e.target.dataset.index;
+                topics.splice(index, 1);
+                saveData();
+            }
+        });
+
+        // Event listener for splitting into groups
+        splitGroupsBtn.addEventListener('click', () => {
+            const numGroups = parseInt(numGroupsInput.value, 10);
+            if (numGroups < 2 || numGroups > students.length) {
+                messageBox.textContent = `Bitte geben Sie eine Zahl zwischen 2 und ${students.length} ein.`;
+                messageBox.classList.remove('hidden');
+                return;
+            } else {
+                messageBox.classList.add('hidden');
+            }
+
+            // Shuffle students and topics
+            const shuffledStudents = shuffleArray([...students]);
+            const shuffledTopics = shuffleArray([...topics]);
+
+            // Create groups
+            const groups = Array.from({ length: numGroups }, () => ({
+                students: [],
+                topic: null,
+            }));
+
+            // Distribute students evenly
+            let studentIndex = 0;
+            while (studentIndex < shuffledStudents.length) {
+                for (let i = 0; i < numGroups; i++) {
+                    if (studentIndex < shuffledStudents.length) {
+                        groups[i].students.push(shuffledStudents[studentIndex]);
+                        studentIndex++;
+                    }
+                }
+            }
+
+            // Assign topics to groups, repeating if necessary
+            if (topics.length > 0) {
+                for (let i = 0; i < numGroups; i++) {
+                    groups[i].topic = shuffledTopics[i % shuffledTopics.length];
+                }
+            }
+
+            displayGroups(groups);
+        });
+
+        // Helper function to shuffle an array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Display the generated groups
+        function displayGroups(groups) {
+            groupsContainer.innerHTML = '';
+            groups.forEach((group, index) => {
+                const groupDiv = document.createElement('div');
+                groupDiv.classList.add('bg-white', 'p-6', 'rounded-2xl', 'shadow-xl', 'border-2', 'border-indigo-200', 'animated-entry', 'flex', 'flex-col', 'gap-4');
+                
+                let topicHtml = '';
+                if (group.topic) {
+                    topicHtml = `<p class="text-center text-lg font-medium text-purple-600">Thema: ${group.topic}</p>`;
+                }
+                
+                groupDiv.innerHTML = `
+                    <h3 class="text-xl font-bold text-center text-indigo-700">Gruppe ${index + 1}</h3>
+                    ${topicHtml}
+                    <ul class="space-y-2">
+                        ${group.students.map(student => `<li class="p-2 bg-indigo-100 rounded-lg text-sm">${student}</li>`).join('')}
+                    </ul>
+                `;
+                groupsContainer.appendChild(groupDiv);
+            });
+        }
+
+        // Load data when the page loads
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+<script type="module">
+  import { registerSW } from 'virtual:pwa-register'
+  registerSW({ immediate: true })
+</script>
+
+</body>
+
+</html>
