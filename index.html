@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" class="h-full bg-[#0a0a0a]">
+<html lang="de" class="h-full">
 
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <style>
+        :root {
+            --accent-color: #22d3ee; /* Bright Cyan */
+            --accent-glow: rgba(34, 211, 238, 0.4);
+        }
+
         body {
             font-family: 'Press Start 2P', cursive;
             background-color: transparent;
@@ -17,6 +24,16 @@
             image-rendering: pixelated;
         }
         
+        #solid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0a0a0a;
+            z-index: -3;
+        }
+
         #starfield {
             position: fixed;
             top: 0;
@@ -42,9 +59,9 @@
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
 
         .pixel-box {
-            background-color: #2c3048;
-            border: 4px solid #f0f0f0;
-            box-shadow: inset 0 0 0 4px #1a1c2c;
+            background-color: #1a1c2c;
+            border: 4px solid #4a5073;
+            box-shadow: inset 0 0 0 4px #0a0a0a;
         }
 
         .pixel-btn {
@@ -57,178 +74,168 @@
         }
         .pixel-btn:hover:not(:disabled) {
             background-color: #6aa0e2;
+            box-shadow: inset -4px -4px 0px 0px #3a6ab1, 0 0 10px var(--accent-glow);
         }
-        /* --- MODIFIED: Better button press effect --- */
         .pixel-btn:active:not(:disabled) {
             transform: translate(2px, 2px);
             box-shadow: none;
         }
         .pixel-btn:disabled {
-            background-color: #555;
-            color: #999;
-            box-shadow: inset -4px -4px 0px 0px #333;
+            background-color: #3e4466;
+            color: #888;
+            border-color: #888;
+            box-shadow: inset -4px -4px 0px 0px #2c3048;
             cursor: not-allowed;
         }
 
-        .pixel-btn-red {
-            background-color: #db5a5a;
-            box-shadow: inset -4px -4px 0px 0px #b13a3a;
-        }
+        .pixel-btn-red { background-color: #db5a5a; box-shadow: inset -4px -4px 0px 0px #b13a3a; }
         .pixel-btn-red:hover:not(:disabled) { background-color: #e26a6a; }
-        
-        .pixel-btn-green {
-            background-color: #5adb5a;
-            box-shadow: inset -4px -4px 0px 0px #3ab13a;
-        }
+        .pixel-btn-green { background-color: #5adb5a; box-shadow: inset -4px -4px 0px 0px #3ab13a; }
         .pixel-btn-green:hover:not(:disabled) { background-color: #6ae26a; }
-        
-        .pixel-btn-yellow {
-            background-color: #dbc65a;
-            box-shadow: inset -4px -4px 0px 0px #b1a03a;
-        }
+        .pixel-btn-yellow { background-color: #dbc65a; box-shadow: inset -4px -4px 0px 0px #b1a03a; }
         .pixel-btn-yellow:hover:not(:disabled) { background-color: #e2d06a; }
 
-        .pixel-input, select.pixel-input {
-            background-color: #1a1c2c;
-            border: 4px solid #f0f0f0;
-            box-shadow: inset 4px 4px 0px 0px #0a0a0a;
+        .pixel-input, select.pixel-input, textarea.pixel-input {
+            background-color: #0a0a0a;
+            border: 4px solid #4a5073;
+            box-shadow: inset 4px 4px 0px 0px #000;
             color: #f0f0f0;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+        }
+        
+        select.pixel-input {
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27292.4%27%20height%3D%27292.4%27%3E%3Cpath%20fill%3D%27%23f0f0f0%27%20d%3D%27M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-13%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2013l128%20127.9c3.6%203.6%207.8%205.4%2013%205.4s9.4-1.8%2013-5.4L287%2095.2c3.5-3.5%205.4-7.8%205.4-13%200-5-1.9-9.4-5.4-13z%27%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right .7em top 50%;
             background-size: .65em auto;
             padding-right: 2em;
         }
-        .pixel-input:focus { outline: none; border-color: #5adb5a; }
 
-        * {
-            border-radius: 0 !important;
-        }
+        .pixel-input:focus { outline: none; border-color: var(--accent-color); }
+
+        * { border-radius: 0 !important; }
 
         #hangman-drawing { shape-rendering: pixelated; }
         #hangman-drawing line, #hangman-drawing circle { stroke-width: 6px; }
         .keyboard-btn { box-shadow: inset -2px -2px 0px 0px #3a6ab1; }
         
-        .animated-entry { animation: none; }
-        .group-card { opacity: 1; transform: none; }
         #random-person-animation-container { transition: none; }
-        .team-card, .team-card.current-turn { transition: none; }
-        .team-card.current-turn { border-color: #5adb5a; transform: none; }
+        .team-card, .team-card.current-turn { transition: border-color 0.2s; }
+        .team-card.current-turn { border-color: var(--accent-color); transform: none; }
 
         main {
             backdrop-filter: none;
             background-color: #2c3048;
             border: 4px solid #f0f0f0;
+            box-shadow: 0 0 20px var(--accent-glow), inset 0 0 15px rgba(0,0,0,0.5);
         }
         
         .game-mode-btn { border: 4px solid #f0f0f0; }
         .game-mode-btn.active { background-color: #db5a5a; }
 
-        .tab-button.active { color: #5adb5a; border-bottom-color: #5adb5a;}
-        /* --- MODIFIED: Flipped toggle colors for intuitive meaning --- */
+        .tab-button.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         .absent-toggle { width: 60px; height: 30px; border: 4px solid #f0f0f0; background-color: #3ab13a; position: relative; appearance: none; cursor: pointer;} /* Green for Present */
         .absent-toggle::before { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background-color: #f0f0f0; transition: transform 0.1s linear; }
         .absent-toggle:checked { background-color: #b13a3a; } /* Red for Absent */
         .absent-toggle:checked::before { transform: translateX(28px); }
         
         .modal { transition: opacity 0.1s linear !important; }
+
+        .text-glow {
+            text-shadow: 0 0 4px var(--accent-color);
+        }
+
+        #qr-code-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+        }
         
-        @keyframes defeat-shake-fall {
-            0% { transform: translate(0, 0) rotate(0); opacity: 1; } 10% { transform: translate(-2px, 0) rotate(-5deg); } 20% { transform: translate(2px, 0) rotate(5deg); } 30% { transform: translate(-2px, 0) rotate(-5deg); } 40% { transform: translate(2px, 0) rotate(5deg); } 50% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(0, 50px) rotate(20deg); opacity: 0; }
-        }
-
-        .is-defeated {
-            animation: defeat-shake-fall 1.5s ease-in-out forwards;
-            transform-origin: 70px 35px;
-        }
-
-        .spinner {
-            border: 2px solid #f3f3f3; border-top: 2px solid #5a8cdb; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block;
-        }
+        @keyframes defeat-shake-fall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 10% { transform: translate(-2px, 0) rotate(-5deg); } 20% { transform: translate(2px, 0) rotate(5deg); } 30% { transform: translate(-2px, 0) rotate(-5deg); } 40% { transform: translate(2px, 0) rotate(5deg); } 50% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(0, 50px) rotate(20deg); opacity: 0; } }
+        .is-defeated { animation: defeat-shake-fall 1.5s ease-in-out forwards; transform-origin: 70px 35px; }
+        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid var(--accent-color); width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none; }
     </style>
 </head>
 
 <body class="h-full">
+    <div id="solid-background"></div>
     <canvas id="starfield"></canvas>
     <div class="scanline-overlay"></div>
-    <div class="flex flex-col min-h-screen items-center justify-start p-4">
-        <header class="w-full flex justify-between items-center py-4 mb-8">
-            <div></div>
-            <h1 class="text-3xl md:text-4xl tracking-tight">Unterricht Tool 64</h1>
-            <button id="sound-toggle-btn" class="pixel-btn p-2 text-xs">Sound: ON</button>
-        </header>
 
-        <main class="w-full max-w-5xl shadow-2xl p-6 md:p-10">
-            
-            <div class="flex justify-center mb-8 border-b-4 border-f0f0f0">
-                <button id="tools-tab-btn" class="tab-button active font-bold py-2 px-6">Werkzeuge</button>
-                <button id="games-tab-btn" class="tab-button font-bold py-2 px-6">Spiele</button>
-            </div>
+    <!-- Main App Container -->
+    <div id="main-app-container">
+        <div class="flex flex-col min-h-screen items-center justify-start p-4">
+            <header class="w-full flex justify-between items-center py-4 mb-8">
+                <div></div>
+                <h1 class="text-3xl md:text-4xl tracking-tight text-glow">Unterricht Tool 64</h1>
+                <button id="sound-toggle-btn" class="pixel-btn p-2 text-xs">Sound: ON</button>
+            </header>
 
-            <div id="tools-container">
-                <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-8">
-                    <div class="flex items-center gap-4">
-                        <label for="num-groups" class="text-sm">Gruppen:</label>
-                        <input type="number" id="num-groups" value="2" min="1" class="pixel-input w-20 p-2 text-center">
-                    </div>
-                    <button id="split-groups-btn" class="pixel-btn w-full md:w-auto p-4 text-sm">Gruppen bilden</button>
-                    <button id="random-person-btn" class="pixel-btn w-full md:w-auto p-4 text-sm">Zufall</button>
-                </div>
-                <div id="results-display" class="mt-8 pixel-box p-6 mb-8">
-                    <div class="flex justify-between items-center mb-2">
-                         <h2 class="text-lg text-center flex-grow">Ergebnisse</h2>
-                         <!-- *** NEW: Random person cycle reset button *** -->
-                         <button id="random-reset-btn" class="pixel-btn pixel-btn-yellow p-2 text-xs hidden">Reset</button>
-                    </div>
-                    <div id="random-person-animation-container" class="mb-4 text-center text-2xl font-bold"><div id="scrolling-names-list-wrapper" class="overflow-hidden w-full h-full"><div id="scrolling-names-list" class="flex flex-row items-center h-full"></div></div></div>
-                    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                    <p id="message-box" class="mt-4 text-center text-yellow-300 font-semibold hidden"></p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-                    <div class="pixel-box p-6">
-                        <h2 class="text-lg text-center">Schüler</h2>
-                        <p id="student-count" class="text-sm text-center mb-4"></p>
-                        <form id="student-form" class="flex gap-4"><input type="text" id="student-name-input" placeholder="Name..." class="pixel-input flex-1 p-3 text-sm"><button type="submit" class="pixel-btn p-3 text-sm">Add</button></form>
-                        <div id="students-container" class="mt-4 scroll-container"><ul id="students-list" class="space-y-2"></ul></div>
-                    </div>
-                    <div class="pixel-box p-6">
-                        <h2 class="text-lg mb-4 text-center">Themen</h2>
-                        <form id="topic-form" class="flex gap-4"><input type="text" id="topic-name-input" placeholder="Thema..." class="pixel-input flex-1 p-3 text-sm"><button type="submit" class="pixel-btn p-3 text-sm">Add</button></form>
-                        <div id="topics-container" class="mt-4 scroll-container"><ul id="topics-list" class="space-y-2"></ul></div>
-                    </div>
+            <main class="w-full max-w-5xl shadow-2xl p-6 md:p-10">
+                
+                <div class="flex justify-center mb-8 border-b-4 border-f0f0f0">
+                    <button id="tools-tab-btn" class="tab-button active font-bold py-2 px-6">Werkzeuge</button>
+                    <button id="games-tab-btn" class="tab-button font-bold py-2 px-6">Spiele</button>
                 </div>
 
-            </div>
-
-            <div id="games-container" class="hidden">
-                 <div class="pixel-box p-4 mb-6 bg-red-900/50">
-                    <label for="api-key-input" class="block text-center text-sm mb-2">Google AI Key (für Quiz & Artikel):</label>
-                    <input type="password" id="api-key-input" placeholder="API Key..." class="pixel-input w-full p-2 text-sm text-center" value="AIzaSyC5Uj3yxDTO_M8O4xidxJVWFZslRp0zr7U">
-                </div>
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl mb-4">Wähle ein Spiel</h2>
-                    <div class="flex flex-wrap justify-center gap-4">
-                        <button id="select-hangman-btn" class="pixel-btn active p-4">Galgenmännchen</button>
-                        <button id="select-article-btn" class="pixel-btn p-4">Artikel-Raten</button>
-                        <button id="select-quiz-btn" class="pixel-btn p-4">KI-Quiz</button>
-                    </div>
-                </div>
-
-                <div id="hangman-wrapper">
-                    <div class="pixel-box p-6">
-                        <div class="text-center mb-6 relative">
-                            <h2 class="text-2xl">Galgenmännchen</h2>
-                            <button id="rules-btn" class="absolute top-0 right-0">[?]</button>
+                <div id="tools-container">
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-8">
+                        <div class="flex items-center gap-4">
+                            <label for="num-groups" class="text-sm">Gruppen:</label>
+                            <input type="number" id="num-groups" value="2" min="1" class="pixel-input w-20 p-2 text-center">
                         </div>
-                        <div id="hangman-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#1a1c2c]">
-                            <h3 class="text-lg text-center -mb-2">Settings</h3>
-                            <div class="flex flex-col sm:flex-row gap-4 w-full">
-                               <div class="flex-1">
+                        <button id="split-groups-btn" class="pixel-btn w-full md:w-auto p-4 text-sm">Gruppen bilden</button>
+                        <button id="random-person-btn" class="pixel-btn w-full md:w-auto p-4 text-sm">Zufall</button>
+                    </div>
+                    <div id="results-display" class="mt-8 pixel-box p-6 mb-8">
+                        <div class="flex justify-between items-center mb-2">
+                             <h2 class="text-lg text-center flex-grow text-glow">Ergebnisse</h2>
+                             <button id="random-reset-btn" class="pixel-btn pixel-btn-yellow p-2 text-xs hidden">Reset</button>
+                        </div>
+                        <div id="random-person-animation-container" class="mb-4 text-center text-2xl font-bold"><div id="scrolling-names-list-wrapper" class="overflow-hidden w-full h-full"><div id="scrolling-names-list" class="flex flex-row items-center h-full"></div></div></div>
+                        <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                        <p id="message-box" class="mt-4 text-center text-yellow-300 font-semibold hidden"></p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                        <div class="pixel-box p-6">
+                            <h2 class="text-lg text-center text-glow">Schüler</h2>
+                            <p id="student-count" class="text-sm text-center mb-4"></p>
+                            <form id="student-form" class="flex gap-4"><input type="text" id="student-name-input" placeholder="Name..." class="pixel-input flex-1 p-3 text-sm"><button type="submit" class="pixel-btn p-3 text-sm">Add</button></form>
+                            <div id="students-container" class="mt-4 scroll-container"><ul id="students-list" class="space-y-2"></ul></div>
+                        </div>
+                        <div class="pixel-box p-6">
+                            <h2 class="text-lg mb-4 text-center text-glow">Themen</h2>
+                            <form id="topic-form" class="flex gap-4"><input type="text" id="topic-name-input" placeholder="Thema..." class="pixel-input flex-1 p-3 text-sm"><button type="submit" class="pixel-btn p-3 text-sm">Add</button></form>
+                            <div id="topics-container" class="mt-4 scroll-container"><ul id="topics-list" class="space-y-2"></ul></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="games-container" class="hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl mb-4 text-glow">Wähle ein Spiel</h2>
+                        <p class="text-xs text-gray-400 mb-4 -mt-3">(Quiz & Artikel-Raten benötigen eine Internetverbindung)</p>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <button id="select-hangman-btn" class="pixel-btn active p-4">Galgenmännchen</button>
+                            <button id="select-article-btn" class="pixel-btn p-4">Artikel-Raten</button>
+                            <button id="select-quiz-btn" class="pixel-btn p-4">KI-Quiz</button>
+                        </div>
+                    </div>
+
+                    <div id="hangman-wrapper">
+                        <div class="pixel-box p-6">
+                            <div class="text-center mb-6 relative">
+                                <h2 class="text-2xl text-glow">Galgenmännchen</h2>
+                                <button id="rules-btn" class="absolute top-0 right-0">[?]</button>
+                            </div>
+                            <div id="hangman-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#0a0a0a]">
+                                <h3 class="text-lg text-center -mb-2">Settings</h3>
+                                <div class="flex-1">
                                     <label class="mb-2 block text-center text-sm">1. Modus</label>
                                     <div class="grid grid-cols-2 gap-2">
                                         <button id="single-player-btn" class="game-mode-btn active p-2 text-sm">Einzel</button>
@@ -239,114 +246,141 @@
                                     <label for="num-teams-input" class="mb-2 block text-center text-sm">Teams</label>
                                     <input type="number" id="num-teams-input" value="2" min="2" class="pixel-input w-full p-2 text-center">
                                 </div>
+                                <button id="custom-word-btn" class="pixel-btn pixel-btn-yellow w-full p-3 text-sm mt-2">Spiel mit QR-Code starten</button>
                             </div>
-                             <div class="flex flex-col sm:flex-row gap-4 w-full">
-                                <div class="flex-1">
-                                    <label class="mb-2 block text-center text-sm">2. Thema/Niveau</label>
-                                    <select id="hangman-topic-select" class="pixel-input w-full p-2 text-sm"></select>
+                            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6"></div>
+                            <div id="hangman-game" class="flex flex-col items-center gap-4 opacity-25 pointer-events-none">
+                                <div class="relative w-48 h-56 mb-4">
+                                    <svg id="hangman-drawing" viewBox="0 0 100 120" class="w-full h-full">
+                                        <line x1="20" y1="110" x2="80" y2="110" stroke="#9ca3af" /> <line x1="30" y1="110" x2="30" y2="10" stroke="#9ca3af" /> <line x1="30" y1="10" x2="70" y2="10" stroke="#9ca3af" /> <line x1="70" y1="10" x2="70" y2="25" stroke="#9ca3af" />
+                                        <g id="hangman-figure"><circle class="hangman-part" cx="70" cy="35" r="10" stroke="white" fill="none" /> <line class="hangman-part" x1="70" y1="45" x2="70" y2="75" stroke="white" /> <line class="hangman-part" x1="70" y1="55" x2="55" y2="70" stroke="white" /> <line class="hangman-part" x1="70" y1="55" x2="85" y2="70" stroke="white" /> <line class="hangman-part" x1="70" y1="75" x2="55" y2="90" stroke="white" /> <line class="hangman-part" x1="70" y1="75" x2="85" y2="90" stroke="white" /></g>
+                                    </svg>
                                 </div>
-                                <div class="flex-1">
-                                    <label class="mb-2 block text-center text-[#1a1c2c] text-sm">.</label>
-                                    <select id="hangman-level-select" class="pixel-input w-full p-2 text-sm">
-                                        <option value="A1">Anfänger (A1)</option><option value="A2">Grundlagen (A2)</option><option value="B1">Mittelstufe (B1)</option><option value="B2">Gute Mittelstufe (B2)</option>
-                                    </select>
+                                <p id="hangman-word" class="text-3xl tracking-widest"></p>
+                                <div class="text-center text-sm"><p>Falsch:</p><p id="hangman-wrong-letters" class="text-red-400 min-h-[28px]"></p></div>
+                                <div id="hangman-keyboard" class="flex flex-wrap justify-center gap-2 max-w-lg"></div>
+                                <div id="hangman-message" class="text-2xl text-center min-h-[40px]"></div>
+                                <div class="flex items-center gap-4 mt-4">
+                                    <button id="guess-word-btn" class="pixel-btn p-2 text-sm">Wort raten</button>
+                                    <button id="next-round-btn" class="pixel-btn pixel-btn-green p-2 text-sm hidden">Nächste Runde</button>
                                 </div>
-                            </div>
-                            <button id="hangman-start-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center">
-                                <span id="start-btn-text">3. START</span>
-                            </button>
-                        </div>
-                        <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6"></div>
-                        <div id="hangman-game" class="flex flex-col items-center gap-4 opacity-25 pointer-events-none">
-                            <div class="relative w-48 h-56 mb-4">
-                                <svg id="hangman-drawing" viewBox="0 0 100 120" class="w-full h-full">
-                                    <line x1="20" y1="110" x2="80" y2="110" stroke="#9ca3af" /> <line x1="30" y1="110" x2="30" y2="10" stroke="#9ca3af" /> <line x1="30" y1="10" x2="70" y2="10" stroke="#9ca3af" /> <line x1="70" y1="10" x2="70" y2="25" stroke="#9ca3af" />
-                                    <g id="hangman-figure"><circle class="hangman-part" cx="70" cy="35" r="10" stroke="white" fill="none" /> <line class="hangman-part" x1="70" y1="45" x2="70" y2="75" stroke="white" /> <line class="hangman-part" x1="70" y1="55" x2="55" y2="70" stroke="white" /> <line class="hangman-part" x1="70" y1="55" x2="85" y2="70" stroke="white" /> <line class="hangman-part" x1="70" y1="75" x2="55" y2="90" stroke="white" /> <line class="hangman-part" x1="70" y1="75" x2="85" y2="90" stroke="white" /></g>
-                                </svg>
-                            </div>
-                            <p id="hangman-word" class="text-3xl tracking-widest"></p>
-                            <div class="text-center text-sm"><p>Falsch:</p><p id="hangman-wrong-letters" class="text-red-400 min-h-[28px]"></p></div>
-                            <div id="hangman-keyboard" class="flex flex-wrap justify-center gap-2 max-w-lg"></div>
-                            <div id="hangman-message" class="text-lg text-center min-h-[32px]"></div>
-                            <div class="flex items-center gap-4 mt-4">
-                                <button id="guess-word-btn" class="pixel-btn p-2 text-sm">Wort raten</button>
-                                <button id="next-round-btn" class="pixel-btn pixel-btn-green p-2 text-sm hidden">Nächste Runde</button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div id="article-guesser-wrapper" class="hidden">
-                     <div class="pixel-box p-6">
-                        <div class="text-center mb-6"><h2 class="text-2xl">Artikel-Raten</h2></div>
-                        <div id="article-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#1a1c2c]">
-                            <h3 class="text-lg text-center -mb-2">Settings</h3>
-                            <div class="flex flex-col sm:flex-row gap-4 w-full">
+                    <div id="article-guesser-wrapper" class="hidden">
+                         <div class="pixel-box p-6">
+                            <div class="text-center mb-6"><h2 class="text-2xl text-glow">Artikel-Raten</h2></div>
+                            <div id="article-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#0a0a0a]">
+                                <h3 class="text-lg text-center -mb-2">Settings</h3>
                                 <div class="flex-1"><label class="mb-2 block text-center text-sm">Thema</label><input type="text" id="article-topic-input" placeholder="Thema (z.B. Küche)" class="pixel-input w-full p-2 text-sm"></div>
-                                <div class="flex-1"><label class="mb-2 block text-center text-sm">Niveau</label><select id="article-level-select" class="pixel-input w-full p-2 text-sm"><option value="A1">Anfänger (A1)</option><option value="A2">Grundlagen (A2)</option><option value="B1">Mittelstufe (B1)</option></select></div>
+                                <button id="article-generate-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center"><span id="article-generate-btn-text">START</span><div id="article-generate-spinner" class="spinner hidden ml-2"></div></button>
                             </div>
-                            <button id="article-generate-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center"><span id="article-generate-btn-text">START</span><div id="article-generate-spinner" class="spinner hidden ml-2"></div></button>
-                        </div>
-                        <div id="article-game" class="flex flex-col items-center gap-6 opacity-25 pointer-events-none">
-                            <div class="text-center"><p id="article-game-message" class="text-lg text-center min-h-[32px]"></p><p id="article-word-display" class="text-4xl my-4 min-h-[50px]"></p></div>
-                            <div id="article-choices" class="flex gap-4"><button data-article="DER" class="article-btn pixel-btn p-6 text-2xl">DER</button><button data-article="DIE" class="article-btn pixel-btn-red p-6 text-2xl">DIE</button><button data-article="DAS" class="article-btn pixel-btn-green p-6 text-2xl">DAS</button></div>
-                            <div id="article-scoreboard" class="flex gap-4 mt-4 text-lg"><div>Richtig: <span id="article-score-correct">0</span></div><div>Falsch: <span id="article-score-wrong">0</span></div></div>
+                            <div id="article-game" class="flex flex-col items-center gap-6 opacity-25 pointer-events-none">
+                                <div class="text-center"><p id="article-game-message" class="text-2xl text-center min-h-[64px]"></p><p id="article-word-display" class="text-4xl my-4 min-h-[50px]"></p></div>
+                                <div id="article-choices" class="flex gap-4"><button data-article="DER" class="article-btn pixel-btn p-6 text-2xl">DER</button><button data-article="DIE" class="article-btn pixel-btn-red p-6 text-2xl">DIE</button><button data-article="DAS" class="article-btn pixel-btn-green p-6 text-2xl">DAS</button></div>
+                                <div id="article-scoreboard" class="flex gap-4 mt-4 text-lg"><div>Richtig: <span id="article-score-correct">0</span></div><div>Falsch: <span id="article-score-wrong">0</span></div></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div id="quiz-wrapper" class="hidden">
-                    <div class="pixel-box p-6">
-                        <div class="text-center mb-6"><h2 class="text-2xl">KI-Quiz</h2></div>
-                        <div id="quiz-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#1a1c2c]">
-                            <h3 class="text-lg text-center -mb-2">Settings</h3>
-                             <div class="flex flex-col sm:flex-row gap-4 w-full">
+                    
+                    <div id="quiz-wrapper" class="hidden">
+                        <div class="pixel-box p-6">
+                            <div class="text-center mb-6"><h2 class="text-2xl text-glow">KI-Quiz</h2></div>
+                            <div id="quiz-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#0a0a0a]">
+                                <h3 class="text-lg text-center -mb-2">Settings</h3>
                                 <div class="flex-1"><label class="mb-2 block text-center text-sm">Thema</label><input type="text" id="quiz-topic-input" placeholder="Thema (z.B. Deutsche Geschichte)" class="pixel-input w-full p-2 text-sm"></div>
-                                <div class="flex-1"><label class="mb-2 block text-center text-sm">Niveau</label><select id="quiz-level-select" class="pixel-input w-full p-2 text-sm"><option value="A2">Einfach (A2)</option><option value="B1" selected>Mittel (B1)</option><option value="B2">Schwer (B2)</option></select></div>
+                                <button id="quiz-generate-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center"><span id="quiz-generate-btn-text">START</span><div id="quiz-generate-spinner" class="spinner hidden ml-2"></div></button>
                             </div>
-                            <button id="quiz-generate-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center"><span id="quiz-generate-btn-text">START</span><div id="quiz-generate-spinner" class="spinner hidden ml-2"></div></button>
-                        </div>
-                        <div id="quiz-game" class="flex flex-col items-center gap-6 opacity-25 pointer-events-none">
-                            <div class="w-full text-center"><p id="quiz-progress" class="text-sm mb-2"></p><div class="pixel-box p-4 bg-[#1a1c2c]"><p id="quiz-question" class="text-lg min-h-[60px]"></p></div></div>
-                            <div id="quiz-options" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                            <p id="quiz-message" class="text-lg text-center min-h-[32px]"></p>
-                            <div id="quiz-scoreboard" class="flex gap-4 mt-4 text-lg"><div>Richtig: <span id="quiz-score-correct">0</span></div><div>Falsch: <span id="quiz-score-wrong">0</span></div></div>
-                            <button id="quiz-next-btn" class="pixel-btn pixel-btn-green p-3 text-sm hidden">Nächste Frage</button>
+                            <div id="quiz-game" class="flex flex-col items-center gap-6 opacity-25 pointer-events-none">
+                                <div class="w-full text-center"><p id="quiz-progress" class="text-sm mb-2"></p><div class="pixel-box p-4 bg-[#0a0a0a]"><p id="quiz-question" class="text-lg min-h-[60px]"></p></div></div>
+                                <div id="quiz-options" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                                <p id="quiz-message" class="text-2xl text-center min-h-[40px]"></p>
+                                <div id="quiz-scoreboard" class="flex gap-4 mt-4 text-lg"><div>Richtig: <span id="quiz-score-correct">0</span></div><div>Falsch: <span id="quiz-score-wrong">0</span></div></div>
+                                <button id="quiz-next-btn" class="pixel-btn pixel-btn-green p-3 text-sm hidden">Nächste Frage</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-            </div>
-        </main>
-    </div>
-
-    <!-- Modals -->
-    <div id="guess-word-modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none">
-        <div class="pixel-box p-6 w-full max-w-md text-center modal-content">
-            <h3 id="guess-modal-title" class="text-lg mb-4"></h3><p class="mb-4 text-sm">Gib das ganze Wort ein.</p><input type="text" id="guess-word-input" class="pixel-input w-full p-2 text-center text-xl uppercase tracking-widest">
-            <div class="flex gap-4 mt-6"><button id="submit-guess-btn" class="pixel-btn w-full p-2 text-sm">OK</button><button id="cancel-guess-btn" class="pixel-btn pixel-btn-red w-full p-2 text-sm">Abbrechen</button></div>
+            </main>
         </div>
-    </div>
-    
-    <div id="rules-modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none">
-        <div class="pixel-box p-6 w-full max-w-lg text-left modal-content">
-            <div class="flex justify-between items-center mb-4"><h3 class="text-lg">Spielregeln</h3><button id="close-rules-btn" class="pixel-btn pixel-btn-red px-2 py-1">&times;</button></div>
-            <div class="space-y-4 text-sm">
-                <div><h4 class="text-green-400">Allgemein</h4><ul class="list-disc pl-5"><li>Errate das Wort, bevor der Galgenmann komplett ist (6 Fehler).</li></ul></div>
-                <div><h4 class="text-green-400">Einzelspieler</h4><ul class="list-disc pl-5"><li>Versuche, alle Wörter der Runde zu erraten.</li></ul></div>
-                <div><h4 class="text-green-400">Team-Modus</h4><ul class="list-disc pl-5"><li>Teams raten abwechselnd. Falsch = Nächstes Team.</li><li><b>Punkte:</b><ul class="list-['-_'] ml-4"><li><b>+5 Pkt.</b> pro richtiger Buchstabe.</li><li><b>+10 Bonus</b> für erratenes Wort.</li><li><b>+25 Bonus</b> für "Wort raten".</li></ul></li></ul></div>
+
+        <!-- Modals -->
+        <div id="guess-word-modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+            <div class="pixel-box p-6 w-full max-w-md text-center modal-content">
+                <h3 id="guess-modal-title" class="text-lg mb-4"></h3><p class="mb-4 text-sm">Gib das ganze Wort ein.</p><input type="text" id="guess-word-input" class="pixel-input w-full p-2 text-center text-xl uppercase tracking-widest">
+                <div class="flex gap-4 mt-6"><button id="submit-guess-btn" class="pixel-btn w-full p-2 text-sm">OK</button><button id="cancel-guess-btn" class="pixel-btn pixel-btn-red w-full p-2 text-sm">Abbrechen</button></div>
             </div>
         </div>
+        
+        <div id="rules-modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+            <div class="pixel-box p-6 w-full max-w-lg text-left modal-content">
+                <div class="flex justify-between items-center mb-4"><h3 class="text-lg">Spielregeln</h3><button id="close-rules-btn" class="pixel-btn pixel-btn-red px-2 py-1">&times;</button></div>
+                <div class="space-y-4 text-sm">
+                    <div><h4 class="text-cyan-400">Allgemein</h4><ul class="list-disc pl-5"><li>Errate das Wort, bevor der Galgenmann komplett ist (6 Fehler).</li></ul></div>
+                    <div><h4 class="text-cyan-400">Einzelspieler</h4><ul class="list-disc pl-5"><li>Versuche, alle Wörter der Runde zu erraten.</li></ul></div>
+                    <div><h4 class="text-cyan-400">Team-Modus</h4><ul class="list-disc pl-5"><li>Teams raten abwechselnd. Falsch = Nächstes Team.</li><li><b>Punkte:</b><ul class="list-['-_'] ml-4"><li><b>+5 Pkt.</b> pro richtiger Buchstabe.</li><li><b>+10 Bonus</b> für erratenes Wort.</li><li><b>+25 Bonus</b> für "Wort raten".</li></ul></li></ul></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="qr-code-modal" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+            <div class="pixel-box p-6 w-full max-w-sm text-center modal-content">
+                <h3 class="text-lg mb-4 text-glow">Wörter per Handy senden</h3>
+                <p class="mb-4 text-sm">Scanne den QR-Code mit deinem Handy, um eine Wortliste einzugeben.</p>
+                <div id="qr-code-container"></div>
+                <p id="qr-status" class="mt-4 text-sm">Warte auf Verbindung...</p>
+                <button id="cancel-qr-btn" class="pixel-btn pixel-btn-red w-full p-2 text-sm mt-6">Abbrechen</button>
+            </div>
+        </div>
     </div>
 
-    <script>
+    <!-- Remote Control View (for Phone) -->
+    <div id="remote-control-container" class="hidden">
+         <div class="flex flex-col min-h-screen items-center justify-center p-4 text-center">
+            <h1 class="text-2xl mb-4 text-glow">Wort-Fernbedienung</h1>
+            <div class="pixel-box p-6 w-full max-w-sm">
+                <label for="word-list-input" class="text-sm mb-2 block">Wörter eingeben:</label>
+                <p class="text-xs text-gray-400 mb-4">(Eins pro Zeile oder durch Komma getrennt)</p>
+                <textarea id="word-list-input" rows="8" class="pixel-input w-full p-2 text-sm"></textarea>
+                <button id="send-words-btn" class="pixel-btn pixel-btn-green w-full p-3 text-sm mt-4">Senden</button>
+                <p id="remote-status" class="mt-4 text-sm min-h-[20px]"></p>
+            </div>
+         </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- User's Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiKsGhYowy01R8gBLJqYQXeiXL-sFTZzA",
+            authDomain: "unterricht-tool.firebaseapp.com",
+            projectId: "unterricht-tool",
+            storageBucket: "unterricht-tool.appspot.com",
+            messagingSenderId: "54878761466",
+            appId: "1:54878761466:web:3f6ddaa0ed05023f9e7443"
+        };
+
+        // Initialize Firebase
+        let app, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase initialization failed. Make sure your config details are correct.", e);
+            alert("Firebase connection failed! The QR Code feature will be disabled.");
+        }
+
         // --- SOUND ENGINE ---
         let audioCtx;
         let isSoundOn = true;
         const soundToggleBtn = document.getElementById('sound-toggle-btn');
         function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.error("Web Audio API is not supported"); isSoundOn = false; soundToggleBtn.textContent = 'Sound: N/A'; soundToggleBtn.disabled = true; } } }
         function playSound(type) { if (!isSoundOn || !audioCtx || audioCtx.state === 'suspended') return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type = 'square'; switch(type) { case 'click': o.frequency.setValueAtTime(440, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.1); break; case 'correct': o.frequency.setValueAtTime(523.25, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'wrong': o.frequency.setValueAtTime(220, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'win': o.frequency.setValueAtTime(523.25, audioCtx.currentTime); o.frequency.linearRampToValueAtTime(1046.5, audioCtx.currentTime + 0.2); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'defeat': o.frequency.setValueAtTime(300, audioCtx.currentTime); o.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.4); g.gain.setValueAtTime(0.2, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.4); break; } o.start(); o.stop(audioCtx.currentTime + 1); }
-        soundToggleBtn.addEventListener('click', () => { initAudio(); if (!audioCtx) return; isSoundOn = !isSoundOn; soundToggleBtn.textContent = isSoundOn ? 'Sound: ON' : 'Sound: OFF'; if(isSoundOn) { if (audioCtx.state === 'suspended') { audioCtx.resume(); } playSound('click'); } });
+        if (soundToggleBtn) soundToggleBtn.addEventListener('click', () => { initAudio(); if (!audioCtx) return; isSoundOn = !isSoundOn; soundToggleBtn.textContent = isSoundOn ? 'Sound: ON' : 'Sound: OFF'; if(isSoundOn) { if (audioCtx.state === 'suspended') { audioCtx.resume(); } playSound('click'); } });
         document.body.addEventListener('click', initAudio, { once: true });
 
         // --- STARFIELD BACKGROUND ---
@@ -355,9 +389,9 @@
         let stars = [];
         function resizeStarfield() { starfieldCanvas.width = window.innerWidth; starfieldCanvas.height = window.innerHeight; }
         function createStars() { stars = []; const numStars = window.innerWidth < 768 ? 100 : 200; for(let i = 0; i < numStars; i++) { stars.push({ x: Math.random() * starfieldCanvas.width, y: Math.random() * starfieldCanvas.height, size: Math.random() * 2 + 1, speed: Math.random() * 0.5 + 0.1 }); } }
-        function drawStars() { if (starfieldCanvas.width === 0) return; starfieldCtx.clearRect(0, 0, starfieldCanvas.width, starfieldCanvas.height); starfieldCtx.fillStyle = '#f0f0f0'; stars.forEach(s => { s.y += s.speed; if(s.y > starfieldCanvas.height) { s.y = 0; s.x = Math.random() * starfieldCanvas.width; } starfieldCtx.fillRect(s.x, s.y, s.size, s.size); }); requestAnimationFrame(drawStars); }
+        function drawStars() { if (!starfieldCanvas || starfieldCanvas.width === 0) return; starfieldCtx.clearRect(0, 0, starfieldCanvas.width, starfieldCanvas.height); starfieldCtx.fillStyle = '#f0f0f0'; stars.forEach(s => { s.y += s.speed; if(s.y > starfieldCanvas.height) { s.y = 0; s.x = Math.random() * starfieldCanvas.width; } starfieldCtx.fillRect(s.x, s.y, s.size, s.size); }); requestAnimationFrame(drawStars); }
         window.addEventListener('resize', () => { resizeStarfield(); createStars(); });
-        resizeStarfield(); createStars(); drawStars();
+        if(starfieldCanvas) { resizeStarfield(); createStars(); drawStars(); }
 
         // --- CORE APP LOGIC ---
         const studentForm = document.getElementById('student-form');
@@ -378,139 +412,43 @@
         const gamesTabBtn = document.getElementById('games-tab-btn');
         const toolsContainer = document.getElementById('tools-container');
         const gamesContainer = document.getElementById('games-container');
-        const apiKeyInput = document.getElementById('api-key-input');
         let students = [];
         let topics = [];
         let unpickedStudents = [];
 
-        function saveData() { 
-            localStorage.setItem('students_data', JSON.stringify(students)); 
-            localStorage.setItem('topics_data', JSON.stringify(topics));
-            localStorage.setItem('unpicked_students', JSON.stringify(unpickedStudents));
-            renderStudents(); 
-            renderTopics(); 
-        }
-
-        function loadData() { 
-            const storedStudents = localStorage.getItem('students_data'); 
-            const storedTopics = localStorage.getItem('topics_data'); 
-            const storedUnpicked = localStorage.getItem('unpicked_students');
-            if (storedStudents) students = JSON.parse(storedStudents); 
-            if (storedTopics) topics = JSON.parse(storedTopics); 
-            if (storedUnpicked) unpickedStudents = JSON.parse(storedUnpicked);
-            renderStudents(); 
-            renderTopics(); 
-        }
-
-        function renderStudents() { 
-            studentsList.innerHTML = ''; 
-            const presentStudents = students.filter(s => !s.absent).length; 
-            studentCountDisplay.textContent = `(${presentStudents} / ${students.length} anwesend)`; 
-            students.forEach((student, index) => { 
-                const li = document.createElement('li'); 
-                li.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'pr-3', 'bg-[#1a1c2c]'); 
-                const nameClasses = student.absent ? 'text-gray-500 line-through' : ''; 
-                // --- MODIFIED: Removed the colored presence marker ---
-                li.innerHTML = `<span class="text-sm flex-grow ${nameClasses}">${student.name}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><span class="mr-2 text-xs">Abwesend</span><input type="checkbox" data-index="${index}" class="absent-toggle" ${student.absent ? 'checked' : ''}></label><button data-index="${index}" class="remove-student-btn text-red-400 hover:text-red-300 font-bold">[X]</button></div>`;
-                studentsList.appendChild(li); 
-            }); 
-        }
-
-        function renderTopics() { 
-            topicsList.innerHTML = ''; 
-            topics.forEach((topic, index) => { 
-                const li = document.createElement('li'); 
-                li.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'bg-[#1a1c2c]'); 
-                // --- MODIFIED: Replaced SVG with pixel-style text button ---
-                li.innerHTML = `<span class="text-sm">${topic}</span><button data-index="${index}" class="remove-topic-btn text-red-400 hover:text-red-300 font-bold">[X]</button>`; 
-                topicsList.appendChild(li); 
-            }); 
-        }
-        
-        studentForm.addEventListener('submit', (e) => { e.preventDefault(); const studentName = studentInput.value.trim(); if (studentName) { playSound('click'); students.push({ name: studentName, absent: false }); unpickedStudents.push(studentName); studentInput.value = ''; saveData(); } });
-        topicForm.addEventListener('submit', (e) => { e.preventDefault(); const topicName = topicInput.value.trim(); if (topicName) { playSound('click'); topics.push(topicName); topicInput.value = ''; saveData(); } });
-        studentsList.addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-student-btn'); if (removeBtn) { playSound('click'); const removedStudent = students.splice(removeBtn.dataset.index, 1)[0]; unpickedStudents = unpickedStudents.filter(s => s !== removedStudent.name); saveData(); } });
-        studentsList.addEventListener('change', (e) => { if (e.target.classList.contains('absent-toggle')) { playSound('click'); students[e.target.dataset.index].absent = e.target.checked; saveData(); } });
-        topicsList.addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-topic-btn'); if (removeBtn) { playSound('click'); topics.splice(removeBtn.dataset.index, 1); saveData(); } });
-        
+        function saveData() { localStorage.setItem('students_data', JSON.stringify(students)); localStorage.setItem('topics_data', JSON.stringify(topics)); localStorage.setItem('unpicked_students', JSON.stringify(unpickedStudents)); renderStudents(); renderTopics(); }
+        function loadData() { const storedStudents = localStorage.getItem('students_data'); const storedTopics = localStorage.getItem('topics_data'); const storedUnpicked = localStorage.getItem('unpicked_students'); if (storedStudents) students = JSON.parse(storedStudents); if (storedTopics) topics = JSON.parse(storedTopics); if (storedUnpicked) unpickedStudents = JSON.parse(storedUnpicked); renderStudents(); renderTopics(); }
+        function renderStudents() { if(!studentsList) return; studentsList.innerHTML = ''; const presentStudents = students.filter(s => !s.absent).length; studentCountDisplay.textContent = `(${presentStudents} / ${students.length} anwesend)`; students.forEach((student, index) => { const li = document.createElement('li'); li.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'pr-3', 'bg-[#0a0a0a]'); const nameClasses = student.absent ? 'text-gray-500 line-through' : ''; li.innerHTML = `<span class="text-sm flex-grow ${nameClasses}">${student.name}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><span class="mr-2 text-xs">Abwesend</span><input type="checkbox" data-index="${index}" class="absent-toggle" ${student.absent ? 'checked' : ''}></label><button data-index="${index}" class="remove-student-btn text-red-400 hover:text-red-300 font-bold">[X]</button></div>`; studentsList.appendChild(li); }); }
+        function renderTopics() { if(!topicsList) return; topicsList.innerHTML = ''; topics.forEach((topic, index) => { const li = document.createElement('li'); li.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'bg-[#0a0a0a]'); li.innerHTML = `<span class="text-sm">${topic}</span><button data-index="${index}" class="remove-topic-btn text-red-400 hover:text-red-300 font-bold">[X]</button>`; topicsList.appendChild(li); }); }
+        if (studentForm) studentForm.addEventListener('submit', (e) => { e.preventDefault(); const studentName = studentInput.value.trim(); if (studentName) { playSound('click'); students.push({ name: studentName, absent: false }); unpickedStudents.push(studentName); studentInput.value = ''; saveData(); } });
+        if (topicForm) topicForm.addEventListener('submit', (e) => { e.preventDefault(); const topicName = topicInput.value.trim(); if (topicName) { playSound('click'); topics.push(topicName); topicInput.value = ''; saveData(); } });
+        if (studentsList) studentsList.addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-student-btn'); if (removeBtn) { playSound('click'); const removedStudent = students.splice(removeBtn.dataset.index, 1)[0]; unpickedStudents = unpickedStudents.filter(s => s !== removedStudent.name); saveData(); } });
+        if (studentsList) studentsList.addEventListener('change', (e) => { if (e.target.classList.contains('absent-toggle')) { playSound('click'); students[e.target.dataset.index].absent = e.target.checked; saveData(); } });
+        if (topicsList) topicsList.addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-topic-btn'); if (removeBtn) { playSound('click'); topics.splice(removeBtn.dataset.index, 1); saveData(); } });
         function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } return array; }
-        
-        splitGroupsBtn.addEventListener('click', () => { playSound('click'); const presentStudents = students.filter(s => !s.absent).map(s => s.name); const numGroups = parseInt(numGroupsInput.value, 10); if (!presentStudents.length || numGroups < 1 || numGroups > presentStudents.length) { messageBox.textContent = `Ungültige Gruppenzahl.`; messageBox.classList.remove('hidden'); return; } messageBox.classList.add('hidden'); randomPersonDisplay.innerHTML = ''; const shuffledStudents = shuffleArray([...presentStudents]); const shuffledTopics = shuffleArray([...topics]); groupsContainer.innerHTML = ''; let createdGroups = Array.from({ length: numGroups }, () => ({ students: [], topic: null })); let s_idx = 0; while (s_idx < shuffledStudents.length) { for (let i = 0; i < numGroups; i++) { if (s_idx < shuffledStudents.length) { createdGroups[i].students.push(shuffledStudents[s_idx]); s_idx++; } } } if (topics.length > 0) { for (let i = 0; i < numGroups; i++) { createdGroups[i].topic = shuffledTopics[i % shuffledTopics.length]; } } displayGroups(createdGroups); });
-        function displayGroups(groups) { groupsContainer.innerHTML = ''; groups.forEach((group, index) => { const div = document.createElement('div'); div.classList.add('pixel-box', 'p-6', 'flex', 'flex-col', 'gap-4'); let topicHtml = group.topic ? `<p class="text-center text-sm">Thema: <span class="text-green-400">${group.topic}</span></p>` : ''; div.innerHTML = `<h3 class="text-md text-center">Gruppe ${index + 1}</h3>${topicHtml}<ul class="space-y-2">${group.students.map(s => `<li class="p-2 bg-[#1a1c2c] text-sm">${s}</li>`).join('')}</ul>`; groupsContainer.appendChild(div); });}
-        
-        // --- MODIFIED: Smarter Random Person Logic ---
-        randomPersonBtn.addEventListener('click', () => { 
-            playSound('click'); 
-            groupsContainer.innerHTML = ''; 
-            messageBox.classList.add('hidden'); 
-            
-            const presentStudents = students.filter(s => !s.absent).map(s => s.name);
-            if (presentStudents.length === 0) { randomPersonDisplay.innerHTML = `<p class="p-4 bg-red-900/50">Keine anwesenden Schüler.</p>`; return; }
-            
-            // Check if unpicked list is empty or out of sync
-            if (unpickedStudents.length === 0 || !unpickedStudents.every(s => presentStudents.includes(s))) {
-                unpickedStudents = [...presentStudents];
-                messageBox.textContent = 'Alle Schüler wurden aufgerufen! Zyklus startet neu.';
-                messageBox.classList.remove('hidden');
-            }
-
-            randomPersonBtn.disabled = true; 
-            randomResetBtn.classList.remove('hidden');
-            const selectedStudent = unpickedStudents[Math.floor(Math.random() * unpickedStudents.length)]; 
-            unpickedStudents = unpickedStudents.filter(s => s !== selectedStudent); // Remove from unpicked list
-            saveData();
-
-            randomPersonDisplay.innerHTML = `<div id="scrolling-names-list-wrapper" class="overflow-hidden w-full h-[40px]"><div id="scrolling-names-list" class="flex flex-row items-center h-full"></div></div>`; 
-            const namesList = document.getElementById('scrolling-names-list'); 
-            const wrapper = document.getElementById('scrolling-names-list-wrapper');
-            const animationNames = []; 
-            for (let i = 0; i < 20; i++) { animationNames.push(...shuffleArray([...presentStudents])); }
-            const finalPositionIndex = animationNames.length - Math.floor(presentStudents.length / 2) -1;
-            animationNames[finalPositionIndex] = selectedStudent;
-
-            animationNames.forEach(name => { const p = document.createElement('p'); p.classList.add('p-2', 'text-2xl', 'mx-4', 'whitespace-nowrap'); p.textContent = name; namesList.appendChild(p); }); 
-
-            const finalElement = namesList.children[finalPositionIndex]; 
-            setTimeout(() => { 
-                const w = wrapper.offsetWidth; 
-                // --- MODIFIED: Adjusted calculation for better centering ---
-                const pos = finalElement.offsetLeft - (w / 2) + (finalElement.offsetWidth / 1.8); 
-                namesList.style.transition = 'transform 3s cubic-bezier(0.25, 0.1, 0.25, 1)'; namesList.style.transform = `translateX(-${pos}px)`; }, 100); 
-
-            namesList.addEventListener('transitionend', () => { playSound('win'); finalElement.classList.add('text-green-400'); randomPersonBtn.disabled = false; }, { once: true }); 
-        });
-        
-        randomResetBtn.addEventListener('click', () => {
-             playSound('click');
-             unpickedStudents = [];
-             randomResetBtn.classList.add('hidden');
-             messageBox.textContent = 'Zufalls-Zyklus zurückgesetzt.';
-             messageBox.classList.remove('hidden');
-             saveData();
-        });
-        
-        toolsTabBtn.addEventListener('click', () => { playSound('click'); toolsContainer.classList.remove('hidden'); gamesContainer.classList.add('hidden'); toolsTabBtn.classList.add('active'); gamesTabBtn.classList.remove('active'); });
-        gamesTabBtn.addEventListener('click', () => { playSound('click'); toolsContainer.classList.add('hidden'); gamesContainer.classList.remove('hidden'); toolsTabBtn.classList.remove('active'); gamesTabBtn.classList.add('active'); });
+        if (splitGroupsBtn) splitGroupsBtn.addEventListener('click', () => { playSound('click'); const presentStudents = students.filter(s => !s.absent).map(s => s.name); const numGroups = parseInt(numGroupsInput.value, 10); if (!presentStudents.length || numGroups < 1 || numGroups > presentStudents.length) { messageBox.textContent = `Ungültige Gruppenzahl.`; messageBox.classList.remove('hidden'); return; } messageBox.classList.add('hidden'); randomPersonDisplay.innerHTML = ''; const shuffledStudents = shuffleArray([...presentStudents]); const shuffledTopics = shuffleArray([...topics]); groupsContainer.innerHTML = ''; let createdGroups = Array.from({ length: numGroups }, () => ({ students: [], topic: null })); let s_idx = 0; while (s_idx < shuffledStudents.length) { for (let i = 0; i < numGroups; i++) { if (s_idx < shuffledStudents.length) { createdGroups[i].students.push(shuffledStudents[s_idx]); s_idx++; } } } if (topics.length > 0) { for (let i = 0; i < numGroups; i++) { createdGroups[i].topic = shuffledTopics[i % shuffledTopics.length]; } } displayGroups(createdGroups); });
+        function displayGroups(groups) { groupsContainer.innerHTML = ''; groups.forEach((group, index) => { const div = document.createElement('div'); div.classList.add('pixel-box', 'p-6', 'flex', 'flex-col', 'gap-4'); let topicHtml = group.topic ? `<p class="text-center text-sm">Thema: <span class="text-cyan-400">${group.topic}</span></p>` : ''; div.innerHTML = `<h3 class="text-md text-center">Gruppe ${index + 1}</h3>${topicHtml}<ul class="space-y-2">${group.students.map(s => `<li class="p-2 bg-[#0a0a0a] text-sm">${s}</li>`).join('')}</ul>`; groupsContainer.appendChild(div); });}
+        if (randomPersonBtn) randomPersonBtn.addEventListener('click', () => { playSound('click'); groupsContainer.innerHTML = ''; messageBox.classList.add('hidden'); const presentStudents = students.filter(s => !s.absent).map(s => s.name); if (presentStudents.length === 0) { randomPersonDisplay.innerHTML = `<p class="p-4 bg-red-900/50">Keine anwesenden Schüler.</p>`; return; } if (unpickedStudents.length === 0 || !unpickedStudents.every(s => presentStudents.includes(s))) { unpickedStudents = [...presentStudents]; messageBox.textContent = 'Alle Schüler wurden aufgerufen! Zyklus startet neu.'; messageBox.classList.remove('hidden'); } randomPersonBtn.disabled = true; randomResetBtn.classList.remove('hidden'); const selectedStudent = unpickedStudents[Math.floor(Math.random() * unpickedStudents.length)]; unpickedStudents = unpickedStudents.filter(s => s !== selectedStudent); saveData(); randomPersonDisplay.innerHTML = `<div id="scrolling-names-list-wrapper" class="overflow-hidden w-full h-[40px]"><div id="scrolling-names-list" class="flex flex-row items-center h-full"></div></div>`; const namesList = document.getElementById('scrolling-names-list'); const wrapper = document.getElementById('scrolling-names-list-wrapper'); const animationNames = []; for (let i = 0; i < 20; i++) { animationNames.push(...shuffleArray([...presentStudents])); } const finalPositionIndex = animationNames.length - Math.floor(presentStudents.length / 2) -1; animationNames[finalPositionIndex] = selectedStudent; animationNames.forEach(name => { const p = document.createElement('p'); p.classList.add('p-2', 'text-2xl', 'mx-4', 'whitespace-nowrap'); p.textContent = name; namesList.appendChild(p); }); const finalElement = namesList.children[finalPositionIndex]; setTimeout(() => { const w = wrapper.offsetWidth; const pos = finalElement.offsetLeft - (w / 2) + (finalElement.offsetWidth / 1.8); namesList.style.transition = 'transform 3s cubic-bezier(0.25, 0.1, 0.25, 1)'; namesList.style.transform = `translateX(-${pos}px)`; }, 100); namesList.addEventListener('transitionend', () => { playSound('win'); finalElement.classList.add('text-cyan-400', 'text-glow'); randomPersonBtn.disabled = false; }, { once: true }); });
+        if (randomResetBtn) randomResetBtn.addEventListener('click', () => { playSound('click'); unpickedStudents = []; randomResetBtn.classList.add('hidden'); messageBox.textContent = 'Zufalls-Zyklus zurückgesetzt.'; messageBox.classList.remove('hidden'); saveData(); });
+        if (toolsTabBtn) toolsTabBtn.addEventListener('click', () => { playSound('click'); toolsContainer.classList.remove('hidden'); gamesContainer.classList.add('hidden'); toolsTabBtn.classList.add('active'); gamesTabBtn.classList.remove('active'); });
+        if (gamesTabBtn) gamesTabBtn.addEventListener('click', () => { playSound('click'); toolsContainer.classList.add('hidden'); gamesContainer.classList.remove('hidden'); toolsTabBtn.classList.remove('active'); gamesTabBtn.classList.add('active'); });
         
         // --- GAME LOGIC ---
         const hangmanWrapper = document.getElementById('hangman-wrapper'), articleGuesserWrapper = document.getElementById('article-guesser-wrapper'), quizWrapper = document.getElementById('quiz-wrapper'), selectHangmanBtn = document.getElementById('select-hangman-btn'), selectArticleBtn = document.getElementById('select-article-btn'), selectQuizBtn = document.getElementById('select-quiz-btn');
         function switchGameView(wrapper, btn) { playSound('click'); [hangmanWrapper, articleGuesserWrapper, quizWrapper].forEach(w => w.classList.add('hidden')); [selectHangmanBtn, selectArticleBtn, selectQuizBtn].forEach(b => b.classList.remove('active')); wrapper.classList.remove('hidden'); btn.classList.add('active'); }
-        selectHangmanBtn.addEventListener('click', () => switchGameView(hangmanWrapper, selectHangmanBtn));
-        selectArticleBtn.addEventListener('click', () => switchGameView(articleGuesserWrapper, selectArticleBtn));
-        selectQuizBtn.addEventListener('click', () => switchGameView(quizWrapper, selectQuizBtn));
+        if (selectHangmanBtn) selectHangmanBtn.addEventListener('click', () => switchGameView(hangmanWrapper, selectHangmanBtn));
+        if (selectArticleBtn) selectArticleBtn.addEventListener('click', () => switchGameView(articleGuesserWrapper, selectArticleBtn));
+        if (selectQuizBtn) selectQuizBtn.addEventListener('click', () => switchGameView(quizWrapper, selectQuizBtn));
+        async function callGenerativeAI(prompt, btn, spinner, textEl, messageEl) { const apiKey = "AIzaSyBiKsGhYowy01R8gBLJqYQXeiXL-sFTZzA"; btn.disabled = true; textEl.textContent = 'Generiere...'; spinner.classList.remove('hidden'); messageEl.textContent = 'KI generiert Inhalt...'; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`; try { const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error?.message || `API error: ${response.status}`); } const result = await response.json(); const text = result.candidates?.[0]?.content?.parts?.[0]?.text; if (!text) throw new Error('Keine Inhalte von der KI erhalten.'); return text; } catch (error) { console.error('AI Error:', error); messageEl.textContent = `Fehler: ${error.message}`; return null; } finally { btn.disabled = false; spinner.classList.add('hidden'); } }
 
-        async function callGenerativeAI(prompt, btn, spinner, textEl, messageEl) { const apiKey = apiKeyInput.value.trim(); if (!apiKey) { messageEl.textContent = 'Fehler: Bitte gib zuerst deinen Google AI API Key ein.'; return null; } btn.disabled = true; textEl.textContent = 'Generiere...'; spinner.classList.remove('hidden'); messageEl.textContent = 'KI generiert Inhalt...'; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`; try { const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error?.message || `API error: ${response.status}`); } const result = await response.json(); const text = result.candidates?.[0]?.content?.parts?.[0]?.text; if (!text) throw new Error('Keine Inhalte von der KI erhalten.'); return text; } catch (error) { console.error('AI Error:', error); messageEl.textContent = `Fehler: ${error.message}`; return null; } finally { btn.disabled = false; spinner.classList.add('hidden'); } }
-
-        // --- HANGMAN GAME (OFFLINE VERSION) ---
-        const hangmanGameEl = document.getElementById('hangman-game'), hangmanTopicSelect = document.getElementById('hangman-topic-select'), hangmanLevelSelect = document.getElementById('hangman-level-select'), hangmanStartBtn = document.getElementById('hangman-start-btn'), hangmanWordEl = document.getElementById('hangman-word'), hangmanFigure = document.getElementById('hangman-figure'), hangmanParts = hangmanFigure.querySelectorAll('.hangman-part'), hangmanWrongLettersEl = document.getElementById('hangman-wrong-letters'), hangmanKeyboardEl = document.getElementById('hangman-keyboard'), hangmanMessageEl = document.getElementById('hangman-message'), scoreboardEl = document.getElementById('scoreboard'), guessWordBtn = document.getElementById('guess-word-btn'), nextRoundBtn = document.getElementById('next-round-btn'), singlePlayerBtn = document.getElementById('single-player-btn'), teamModeBtn = document.getElementById('team-mode-btn'), numTeamsContainer = document.getElementById('num-teams-container'), numTeamsInput = document.getElementById('num-teams-input'), guessWordModal = document.getElementById('guess-word-modal'), guessWordInput = document.getElementById('guess-word-input'), submitGuessBtn = document.getElementById('submit-guess-btn'), cancelGuessBtn = document.getElementById('cancel-guess-btn'), rulesBtn = document.getElementById('rules-btn'), rulesModal = document.getElementById('rules-modal'), closeRulesBtn = document.getElementById('close-rules-btn');
+        // --- HANGMAN GAME ---
+        const hangmanGameEl = document.getElementById('hangman-game'), customWordBtn = document.getElementById('custom-word-btn'), hangmanWordEl = document.getElementById('hangman-word'), hangmanFigure = document.getElementById('hangman-figure'), hangmanParts = hangmanFigure.querySelectorAll('.hangman-part'), hangmanWrongLettersEl = document.getElementById('hangman-wrong-letters'), hangmanKeyboardEl = document.getElementById('hangman-keyboard'), hangmanMessageEl = document.getElementById('hangman-message'), scoreboardEl = document.getElementById('scoreboard'), guessWordBtn = document.getElementById('guess-word-btn'), nextRoundBtn = document.getElementById('next-round-btn'), singlePlayerBtn = document.getElementById('single-player-btn'), teamModeBtn = document.getElementById('team-mode-btn'), numTeamsContainer = document.getElementById('num-teams-container'), numTeamsInput = document.getElementById('num-teams-input'), guessWordModal = document.getElementById('guess-word-modal'), guessWordInput = document.getElementById('guess-word-input'), submitGuessBtn = document.getElementById('submit-guess-btn'), cancelGuessBtn = document.getElementById('cancel-guess-btn'), rulesBtn = document.getElementById('rules-btn'), rulesModal = document.getElementById('rules-modal'), closeRulesBtn = document.getElementById('close-rules-btn'), qrCodeModal = document.getElementById('qr-code-modal'), qrCodeContainer = document.getElementById('qr-code-container'), qrStatus = document.getElementById('qr-status'), cancelQrBtn = document.getElementById('cancel-qr-btn');
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'.split(''), maxWrongGuesses = 6;
-        let gameMode = 'single', hangmanState = {};
-        const wordBank = { 'Tiere': { 'A1': ['HUND', 'KATZE', 'MAUS', 'FISCH', 'VOGEL', 'PFERD', 'KUH', 'SCHAF', 'BIENE', 'ENTE'], 'A2': ['ELEFANT', 'GIRAFFE', 'KROKODIL', 'SCHLANGE', 'AFFE', 'TIGER', 'LOEWE', 'PAPAGEI', 'SPINNE', 'WOLF'], 'B1': ['NASHORN', 'FLUSSPFERD', 'SCHMETTERLING', 'MARIENKAEFER', 'STACHELSCHWEIN', 'IGEL', 'EICHHOERNCHEN', 'KAEFER', 'AMEISE'], 'B2': ['GUEPARD', 'CHAMAELEON', 'SKORPION', 'PELIKAN', 'WASCHBAER', 'MURMELTIER', 'FLEDERMAUS'] }, 'Essen & Trinken': { 'A1': ['APFEL', 'BROT', 'WASSER', 'MILCH', 'KAESE', 'EI', 'REIS', 'TEE', 'SALZ', 'BUTTER'], 'A2': ['KARTOFFEL', 'TOMATE', 'ZWIEBEL', 'SALAT', 'WURST', 'KUCHEN', 'SAFT', 'BIER', 'SUPPE', 'ZUCKER'], 'B1': ['AUBERGINE', 'ZUCCHINI', 'GARNELEN', 'LACHS', 'SCHNITZEL', 'QUARK', 'MINERALWASSER', 'JOGHURT', 'KNOBLAUCH'], 'B2': ['ARTISCHOCKE', 'FENCHEL', 'ROSMARIN', 'THYMIAN', 'KAPERN', 'CHAMPIGNON', 'SAHNE'] }, 'Schule & Beruf': { 'A1': ['BUCH', 'TISCH', 'STUHL', 'LEHRER', 'SCHULE', 'ARZT', 'KOCH', 'POLIZEI'], 'A2': ['HAUSAUFGABE', 'PRUEFUNG', 'KLASSENZIMMER', 'UNIVERSITAET', 'BAECKER', 'KELLNER', 'INGENIEUR', 'FRISEUR'], 'B1': ['BIBLIOTHEK', 'LABOR', 'ZEUGNIS', 'AUSBILDUNG', 'GESCHAEFTSMANN', 'WISSENSCHAFTLER', 'ANWALT', 'ARCHITEKT'], 'B2': ['STIPENDIUM', 'VORLESUNG', 'DISSERTATION', 'PERSONALABTEILUNG', 'STEUERBERATER', 'JOURNALIST', 'APOTHEKER'] }, 'Stadt & Verkehr': { 'A1': ['HAUS', 'AUTO', 'BUS', 'BAUM', 'STRASSE', 'ZUG', 'PARK', 'BANK'], 'A2': ['FLUGZEUG', 'FAHRRAD', 'BAHNHOF', 'FLUGHAFEN', 'AMPEL', 'BRUECKE', 'RESTAURANT', 'SUPERMARKT'], 'B1': ['KREUZUNG', 'GEHWEG', 'RATHAUS', 'SEHENSWUERDIGKEIT', 'U-BAHN', 'HALTESTELLE', 'FEUERWEHR'], 'B2': ['FUSSGAENGERZONE', 'EINBAHNSTRASSE', 'KREISVERKEHR', 'STAATSOPER', 'GENEARALKONSULAT', 'BOTSCHAFT'] } };
-        function populateHangmanTopics() { hangmanTopicSelect.innerHTML = ''; for (const topic in wordBank) { const opt = document.createElement('option'); opt.value = topic; opt.textContent = topic; hangmanTopicSelect.appendChild(opt); } }
-        singlePlayerBtn.addEventListener('click', () => { playSound('click'); gameMode = 'single'; singlePlayerBtn.classList.add('active'); teamModeBtn.classList.remove('active'); numTeamsContainer.classList.add('hidden'); });
-        teamModeBtn.addEventListener('click', () => { playSound('click'); gameMode = 'team'; teamModeBtn.classList.add('active'); singlePlayerBtn.classList.remove('active'); numTeamsContainer.classList.remove('hidden'); });
+        let gameMode = 'single', hangmanState = {}, qrCode, unsubscribe;
+        if (singlePlayerBtn) singlePlayerBtn.addEventListener('click', () => { playSound('click'); gameMode = 'single'; singlePlayerBtn.classList.add('active'); teamModeBtn.classList.remove('active'); numTeamsContainer.classList.add('hidden'); });
+        if (teamModeBtn) teamModeBtn.addEventListener('click', () => { playSound('click'); gameMode = 'team'; teamModeBtn.classList.add('active'); singlePlayerBtn.classList.remove('active'); numTeamsContainer.classList.remove('hidden'); });
         function resetHangmanState() { hangmanState = { teams: [], currentTeamIndex: 0, selectedWord: '', correctLetters: [], wrongLetters: [], isRoundOver: true, wordList: [], currentWordIndex: 0, }; }
-        function startHangmanGame() { playSound('click'); const topic = hangmanTopicSelect.value, level = hangmanLevelSelect.value; hangmanGameEl.classList.add('opacity-25', 'pointer-events-none'); scoreboardEl.innerHTML = ''; const wordsForLevel = wordBank[topic]?.[level]; if (!wordsForLevel || wordsForLevel.length === 0) { hangmanMessageEl.textContent = 'Keine Wörter für diese Auswahl.'; return; } const words = shuffleArray([...wordsForLevel]).slice(0, 10); resetHangmanState(); if (gameMode === 'single') { hangmanState.teams = [{ id: 0, name: 'Spieler 1', score: 0 }]; } else { const numTeams = parseInt(numTeamsInput.value, 10); if (isNaN(numTeams) || numTeams < 2) { alert("Ungültige Team-Anzahl."); return; } hangmanState.teams = Array.from({ length: numTeams }, (_, i) => ({ id: i, name: `Team ${i + 1}`, score: 0 })); } hangmanState.wordList = words; startNewHangmanRound(); }
+        function startHangmanGame(words) { playSound('click'); if(!words || words.length === 0) { alert("Keine Wörter zum Spielen erhalten."); return; } hangmanGameEl.classList.add('opacity-25', 'pointer-events-none'); scoreboardEl.innerHTML = ''; resetHangmanState(); if (gameMode === 'single') { hangmanState.teams = [{ id: 0, name: 'Spieler 1', score: 0 }]; } else { const numTeams = parseInt(numTeamsInput.value, 10); if (isNaN(numTeams) || numTeams < 2) { alert("Ungültige Team-Anzahl."); return; } hangmanState.teams = Array.from({ length: numTeams }, (_, i) => ({ id: i, name: `Team ${i + 1}`, score: 0 })); } hangmanState.wordList = words; startNewHangmanRound(); }
         function startNewHangmanRound() { if (hangmanState.currentWordIndex >= hangmanState.wordList.length) { endHangmanGame(); return; } hangmanState.selectedWord = hangmanState.wordList[hangmanState.currentWordIndex]; hangmanState.currentWordIndex++; hangmanState.correctLetters = []; hangmanState.wrongLetters = []; hangmanState.isRoundOver = false; hangmanGameEl.classList.remove('opacity-25', 'pointer-events-none'); hangmanFigure.classList.remove('is-defeated'); hangmanParts.forEach(p => p.style.visibility = 'hidden'); hangmanMessageEl.textContent = ''; nextRoundBtn.classList.add('hidden'); guessWordBtn.classList.remove('hidden'); displayHangmanWord(); updateWrongLetters(); createKeyboard(); renderScoreboard(); }
         function renderScoreboard() { scoreboardEl.innerHTML = ''; if (hangmanState.teams.length <= 1) return; hangmanState.teams.forEach((team, index) => { const card = document.createElement('div'); card.classList.add('team-card', 'pixel-box', 'p-3', 'text-center'); if (index === hangmanState.currentTeamIndex) { card.classList.add('current-turn'); } card.innerHTML = `<p class="text-sm">${team.name}</p><p id="score-${team.id}" class="text-xl">${team.score}</p>`; scoreboardEl.appendChild(card); }); }
         function displayHangmanWord() { if (!hangmanState.selectedWord) return; hangmanWordEl.innerHTML = hangmanState.selectedWord.split('').map(l => `<span>${hangmanState.correctLetters.includes(l) ? l : '_'}</span>`).join(''); const inner = hangmanWordEl.innerText.replace(/\s/g, ''); if (!hangmanState.isRoundOver && inner === hangmanState.selectedWord) { awardPoints(10); endHangmanRound(true); } }
@@ -519,35 +457,73 @@
         function handleGuess(l, btn) { if (hangmanState.isRoundOver) return; btn.disabled = true; const u_l = l.toUpperCase(); if (hangmanState.selectedWord.includes(u_l)) { playSound('correct'); if (!hangmanState.correctLetters.includes(u_l)) { hangmanState.correctLetters.push(u_l); awardPoints(5 * hangmanState.selectedWord.split(u_l).length - 1); displayHangmanWord(); } } else { playSound('wrong'); if (!hangmanState.wrongLetters.includes(u_l)) { hangmanState.wrongLetters.push(u_l); updateWrongLetters(); changeTurn(); } } }
         function changeTurn() { if (hangmanState.teams.length <= 1) return; hangmanState.currentTeamIndex = (hangmanState.currentTeamIndex + 1) % hangmanState.teams.length; renderScoreboard(); }
         function awardPoints(p) { if (hangmanState.teams.length === 0) return; const team = hangmanState.teams[hangmanState.currentTeamIndex]; team.score += p; const el = document.getElementById(`score-${team.id}`); if (el) { el.textContent = team.score; } }
-        function endHangmanRound(isWin) { hangmanState.isRoundOver = true; hangmanKeyboardEl.querySelectorAll('.keyboard-btn').forEach(btn => btn.disabled = true); guessWordBtn.classList.add('hidden'); if (isWin) { playSound('win'); const n = hangmanState.teams.length > 1 ? hangmanState.teams[hangmanState.currentTeamIndex].name : 'Du hast'; hangmanMessageEl.textContent = `${n} GEWONNEN!`; nextRoundBtn.classList.remove('hidden'); } else { playSound('defeat'); hangmanFigure.classList.add('is-defeated'); hangmanMessageEl.textContent = `VERLOREN! Wort: ${hangmanState.selectedWord}`; setTimeout(() => { nextRoundBtn.classList.remove('hidden'); }, 1500); } }
+        function endHangmanRound(isWin) { hangmanState.isRoundOver = true; hangmanKeyboardEl.querySelectorAll('.keyboard-btn').forEach(btn => btn.disabled = true); guessWordBtn.classList.add('hidden'); if (isWin) { playSound('win'); const n = hangmanState.teams.length > 1 ? hangmanState.teams[hangmanState.currentTeamIndex].name : 'Du hast'; hangmanMessageEl.innerHTML = `<span class="text-cyan-400">${n} GEWONNEN!</span>`; nextRoundBtn.classList.remove('hidden'); } else { playSound('defeat'); hangmanFigure.classList.add('is-defeated'); hangmanMessageEl.textContent = `VERLOREN! Wort: ${hangmanState.selectedWord}`; setTimeout(() => { nextRoundBtn.classList.remove('hidden'); }, 1500); } }
         function endHangmanGame() { let msg = ''; if (hangmanState.teams.length > 1) { const winner = hangmanState.teams.reduce((p, c) => (p.score > c.score) ? p : c); msg = `${winner.name} gewinnt!`; } else { msg = 'Alle Wörter gespielt!'; } hangmanMessageEl.innerHTML = `<span class="text-2xl text-yellow-300">SPIELENDE!</span><br>${msg}`; nextRoundBtn.classList.add('hidden'); guessWordBtn.classList.add('hidden'); }
         function openModal(m) { playSound('click'); m.classList.remove('opacity-0', 'pointer-events-none'); }
         function closeModal(m) { playSound('click'); m.classList.add('opacity-0', 'pointer-events-none'); }
         function handleWordGuess() { const guess = guessWordInput.value.trim().toUpperCase(); if (!guess) return; if (guess === hangmanState.selectedWord) { awardPoints(25); hangmanState.correctLetters = hangmanState.selectedWord.split(''); displayHangmanWord(); } else { playSound('wrong'); const n = hangmanState.teams.length > 1 ? hangmanState.teams[hangmanState.currentTeamIndex].name : 'Du hast'; hangmanMessageEl.textContent = `${n} falsch geraten!`; changeTurn(); } closeModal(guessWordModal); }
-        guessWordBtn.addEventListener('click', () => openModal(guessWordModal)); cancelGuessBtn.addEventListener('click', () => closeModal(guessWordModal)); rulesBtn.addEventListener('click', () => openModal(rulesModal)); closeRulesBtn.addEventListener('click', () => closeModal(rulesModal)); submitGuessBtn.addEventListener('click', handleWordGuess); guessWordInput.addEventListener('keyup', (e) => { if(e.key === 'Enter') handleWordGuess(); }); nextRoundBtn.addEventListener('click', ()=>{playSound('click'); startNewHangmanRound()}); hangmanStartBtn.addEventListener('click', startHangmanGame);
+        if (guessWordBtn) guessWordBtn.addEventListener('click', () => openModal(guessWordModal)); 
+        if (cancelGuessBtn) cancelGuessBtn.addEventListener('click', () => closeModal(guessWordModal)); 
+        if (rulesBtn) rulesBtn.addEventListener('click', () => openModal(rulesModal)); 
+        if (closeRulesBtn) closeRulesBtn.addEventListener('click', () => closeModal(rulesModal)); 
+        if (submitGuessBtn) submitGuessBtn.addEventListener('click', handleWordGuess); 
+        if (guessWordInput) guessWordInput.addEventListener('keyup', (e) => { if(e.key === 'Enter') handleWordGuess(); }); 
+        if (nextRoundBtn) nextRoundBtn.addEventListener('click', ()=>{playSound('click'); startNewHangmanRound()}); 
+        
+        // --- QR Code Word Entry Logic ---
+        if (customWordBtn) customWordBtn.addEventListener('click', async () => {
+            if (!db) {
+                alert("Firebase ist nicht korrekt konfiguriert. Die QR-Code-Funktion ist deaktiviert.");
+                return;
+            }
+            const baseURL = "https://ashwin-1114.github.io/UnterrichtTool/index.html";
+
+            playSound('click');
+            const sessionId = "hangman_" + Math.random().toString(36).substring(2, 10);
+            const sessionDocRef = doc(db, "sessions", sessionId);
+            await setDoc(sessionDocRef, { createdAt: new Date() });
+            
+            const url = baseURL.split('?')[0] + `?session=${sessionId}`;
+            qrCodeContainer.innerHTML = '';
+            qrCode = new QRCode(qrCodeContainer, { text: url, width: 200, height: 200 });
+            qrStatus.textContent = "Warte auf Verbindung...";
+            openModal(qrCodeModal);
+
+            unsubscribe = onSnapshot(sessionDocRef, (doc) => {
+                if (doc.exists() && doc.data().words) {
+                    const words = doc.data().words;
+                    closeModal(qrCodeModal);
+                    startHangmanGame(words);
+                    if(unsubscribe) unsubscribe();
+                    deleteDoc(sessionDocRef);
+                }
+            });
+        });
+        if (cancelQrBtn) cancelQrBtn.addEventListener('click', () => { if (unsubscribe) unsubscribe(); closeModal(qrCodeModal); });
+
 
         // --- ARTICLE GUESSER GAME ---
-        const articleGame = document.getElementById('article-game'), articleTopicInput = document.getElementById('article-topic-input'), articleLevelSelect = document.getElementById('article-level-select'), articleGenerateBtn = document.getElementById('article-generate-btn'), articleGenerateBtnText = document.getElementById('article-generate-btn-text'), articleGenerateSpinner = document.getElementById('article-generate-spinner'), articleWordDisplay = document.getElementById('article-word-display'), articleChoices = document.getElementById('article-choices'), articleScoreCorrect = document.getElementById('article-score-correct'), articleScoreWrong = document.getElementById('article-score-wrong'), articleGameMessage = document.getElementById('article-game-message');
+        const articleGame = document.getElementById('article-game'), articleTopicInput = document.getElementById('article-topic-input'), articleGenerateBtn = document.getElementById('article-generate-btn'), articleGenerateBtnText = document.getElementById('article-generate-btn-text'), articleGenerateSpinner = document.getElementById('article-generate-spinner'), articleWordDisplay = document.getElementById('article-word-display'), articleChoices = document.getElementById('article-choices'), articleScoreCorrect = document.getElementById('article-score-correct'), articleScoreWrong = document.getElementById('article-score-wrong'), articleGameMessage = document.getElementById('article-game-message');
         let articleGameState = {};
         function resetArticleGameState() { articleGameState = { wordList: [], currentWordIndex: 0, correct: 0, wrong: 0 }; }
-        async function startArticleGame() { playSound('click'); const topic = articleTopicInput.value.trim(), level = articleLevelSelect.value; if (!topic) { alert("Bitte Thema eingeben."); return; } articleGame.classList.add('opacity-25', 'pointer-events-none'); const prompt = `Generate 10 German nouns with their article (DER, DIE, DAS) for topic '${topic}', level ${level}. Return ONLY a comma-separated list. Example: DER HUND,DIE KATZE,DAS HAUS`; const text = await callGenerativeAI(prompt, articleGenerateBtn, articleGenerateSpinner, articleGenerateBtnText, articleGameMessage); if (text) { const words = text.split(',').map(p => { const parts = p.trim().toUpperCase().split(' '); if (parts.length === 2 && ['DER', 'DIE', 'DAS'].includes(parts[0])) { return { article: parts[0], noun: parts[1] }; } return null; }).filter(Boolean); if(words.length === 0) { articleGameMessage.textContent = 'Fehler: KI konnte keine Wörter generieren.'; articleGenerateBtnText.textContent = 'START'; return; } resetArticleGameState(); articleGameState.wordList = shuffleArray(words); articleGame.classList.remove('opacity-25', 'pointer-events-none'); nextArticleWord(); } articleGenerateBtnText.textContent = 'START'; }
+        async function startArticleGame() { playSound('click'); const topic = articleTopicInput.value.trim(); if (!topic) { alert("Bitte Thema eingeben."); return; } articleGame.classList.add('opacity-25', 'pointer-events-none'); const prompt = `Generate 10 German nouns with their article (DER, DIE, DAS) for topic '${topic}'. Return ONLY a comma-separated list. Example: DER HUND,DIE KATZE,DAS HAUS`; const text = await callGenerativeAI(prompt, articleGenerateBtn, articleGenerateSpinner, articleGenerateBtnText, articleGameMessage); if (text) { const words = text.split(',').map(p => { const parts = p.trim().toUpperCase().split(' '); if (parts.length === 2 && ['DER', 'DIE', 'DAS'].includes(parts[0])) { return { article: parts[0], noun: parts[1] }; } return null; }).filter(Boolean); if(words.length === 0) { articleGameMessage.textContent = 'Fehler: KI konnte keine Wörter generieren.'; articleGenerateBtnText.textContent = 'START'; return; } resetArticleGameState(); articleGameState.wordList = shuffleArray(words); articleGame.classList.remove('opacity-25', 'pointer-events-none'); nextArticleWord(); } articleGenerateBtnText.textContent = 'START'; }
         function nextArticleWord() { if (articleGameState.currentWordIndex >= articleGameState.wordList.length) { articleWordDisplay.innerHTML = `<span class="text-2xl text-yellow-300">SPIELENDE!</span>`; articleGameMessage.textContent = `Endstand: ${articleGameState.correct} Richtig, ${articleGameState.wrong} Falsch.`; articleChoices.classList.add('hidden'); return; } articleGameMessage.textContent = `Wort ${articleGameState.currentWordIndex + 1} / ${articleGameState.wordList.length}`; const current = articleGameState.wordList[articleGameState.currentWordIndex]; articleWordDisplay.textContent = current.noun; articleScoreCorrect.textContent = articleGameState.correct; articleScoreWrong.textContent = articleGameState.wrong; articleChoices.classList.remove('hidden'); articleChoices.querySelectorAll('.article-btn').forEach(btn => btn.disabled = false); }
-        articleChoices.addEventListener('click', (e) => { if (!e.target.matches('.article-btn')) return; articleChoices.querySelectorAll('.article-btn').forEach(btn => btn.disabled = true); const chosen = e.target.dataset.article, correct = articleGameState.wordList[articleGameState.currentWordIndex].article; if (chosen === correct) { playSound('correct'); articleGameState.correct++; articleGameMessage.textContent = "Richtig!"; } else { playSound('wrong'); articleGameState.wrong++; articleGameMessage.textContent = `Falsch! Richtig: ${correct} ${articleGameState.wordList[articleGameState.currentWordIndex].noun}`; } articleGameState.currentWordIndex++; setTimeout(nextArticleWord, 1500); });
-        articleGenerateBtn.addEventListener('click', startArticleGame);
+        if (articleChoices) articleChoices.addEventListener('click', (e) => { if (!e.target.matches('.article-btn')) return; articleChoices.querySelectorAll('.article-btn').forEach(btn => btn.disabled = true); const chosen = e.target.dataset.article, correct = articleGameState.wordList[articleGameState.currentWordIndex].article; if (chosen === correct) { playSound('correct'); articleGameState.correct++; articleGameMessage.innerHTML = `<span class="text-cyan-400">Richtig!</span>`; } else { playSound('wrong'); articleGameState.wrong++; articleGameMessage.innerHTML = `<span class="text-red-400">Falsch!</span> Richtig: ${correct} ${articleGameState.wordList[articleGameState.currentWordIndex].noun}`; } articleGameState.currentWordIndex++; setTimeout(nextArticleWord, 1500); });
+        if (articleGenerateBtn) articleGenerateBtn.addEventListener('click', startArticleGame);
 
         // --- KI-QUIZ GAME ---
-        const quizGame = document.getElementById('quiz-game'), quizTopicInput = document.getElementById('quiz-topic-input'), quizLevelSelect = document.getElementById('quiz-level-select'), quizGenerateBtn = document.getElementById('quiz-generate-btn'), quizGenerateBtnText = document.getElementById('quiz-generate-btn-text'), quizGenerateSpinner = document.getElementById('quiz-generate-spinner'), quizProgress = document.getElementById('quiz-progress'), quizQuestion = document.getElementById('quiz-question'), quizOptions = document.getElementById('quiz-options'), quizMessage = document.getElementById('quiz-message'), quizScoreCorrect = document.getElementById('quiz-score-correct'), quizScoreWrong = document.getElementById('quiz-score-wrong'), quizNextBtn = document.getElementById('quiz-next-btn');
+        const quizGame = document.getElementById('quiz-game'), quizTopicInput = document.getElementById('quiz-topic-input'), quizGenerateBtn = document.getElementById('quiz-generate-btn'), quizGenerateBtnText = document.getElementById('quiz-generate-btn-text'), quizGenerateSpinner = document.getElementById('quiz-generate-spinner'), quizProgress = document.getElementById('quiz-progress'), quizQuestion = document.getElementById('quiz-question'), quizOptions = document.getElementById('quiz-options'), quizMessage = document.getElementById('quiz-message'), quizScoreCorrect = document.getElementById('quiz-score-correct'), quizScoreWrong = document.getElementById('quiz-score-wrong'), quizNextBtn = document.getElementById('quiz-next-btn');
         let quizState = {};
         function resetQuizState() { quizState = { questions: [], currentQuestionIndex: 0, correct: 0, wrong: 0, }; }
         async function startQuizGame() { 
             playSound('click'); 
-            const topic = quizTopicInput.value.trim(), level = quizLevelSelect.value; 
+            const topic = quizTopicInput.value.trim();
             if (!topic) { 
                 alert("Bitte Thema eingeben."); 
                 return; 
             } 
             quizGame.classList.add('opacity-25', 'pointer-events-none'); 
-            const prompt = `Generate 5 multiple-choice questions about '${topic}' for a German learner at level ${level}. Format as a valid JSON array of objects. Each object must have "question" (string), "options" (array of 4 strings), and "correctAnswer" (string matching an option). Example: [{"question": "Hauptstadt von Deutschland?", "options": ["München", "Hamburg", "Berlin", "Köln"], "correctAnswer": "Berlin"}]`; 
+            const prompt = `Generate 5 multiple-choice questions about '${topic}'. Format as a valid JSON array of objects. Each object must have "question" (string), "options" (array of 4 strings), and "correctAnswer" (string matching an option). Example: [{"question": "Hauptstadt von Deutschland?", "options": ["München", "Hamburg", "Berlin", "Köln"], "correctAnswer": "Berlin"}]`; 
             const text = await callGenerativeAI(prompt, quizGenerateBtn, quizGenerateSpinner, quizGenerateBtnText, quizMessage); 
             if (text) { 
                 try { 
@@ -596,13 +572,13 @@
             if (selected === correct) { 
                 playSound('correct'); 
                 quizState.correct++; 
-                quizMessage.textContent = 'Richtig!'; 
+                quizMessage.innerHTML = `<span class="text-cyan-400">Richtig!</span>`; 
                 btn.classList.remove('pixel-btn'); 
                 btn.classList.add('pixel-btn-green'); 
             } else { 
                 playSound('wrong'); 
                 quizState.wrong++; 
-                quizMessage.textContent = `Falsch! Richtig: ${correct}`; 
+                quizMessage.innerHTML = `<span class="text-red-400">Falsch!</span> Richtig: ${correct}`; 
                 btn.classList.remove('pixel-btn'); 
                 btn.classList.add('pixel-btn-red'); 
                 quizOptions.querySelectorAll('.quiz-option-btn').forEach(b => { 
@@ -614,23 +590,61 @@
             } 
             quizState.currentQuestionIndex++; 
         }
-        quizGenerateBtn.addEventListener('click', startQuizGame);
-        quizNextBtn.addEventListener('click', () => { playSound('click'); displayNextQuestion(); });
+        if (quizGenerateBtn) quizGenerateBtn.addEventListener('click', startQuizGame);
+        if (quizNextBtn) quizNextBtn.addEventListener('click', () => { playSound('click'); displayNextQuestion(); });
+        
+        // --- App Initializer and View Router ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
 
-        // --- INITIAL LOAD ---
-        document.addEventListener('DOMContentLoaded', () => { 
-            resetHangmanState(); 
-            resetArticleGameState(); 
-            resetQuizState(); 
-            populateHangmanTopics(); 
-            loadData(); 
+            if (sessionId && db) {
+                // This is the remote control view
+                document.getElementById('main-app-container').classList.add('hidden');
+                const remoteContainer = document.getElementById('remote-control-container');
+                remoteContainer.classList.remove('hidden');
+
+                const wordListInput = document.getElementById('word-list-input');
+                const sendWordsBtn = document.getElementById('send-words-btn');
+                const remoteStatus = document.getElementById('remote-status');
+
+                sendWordsBtn.addEventListener('click', async () => {
+                    const wordsText = wordListInput.value.trim();
+                    if (!wordsText) {
+                        remoteStatus.textContent = "Bitte Wörter eingeben.";
+                        return;
+                    }
+                    const words = wordsText.split(/[\n,]+/)
+                        .map(w => w.trim().toUpperCase())
+                        .filter(w => w.length > 0);
+                    
+                    if (words.length === 0) {
+                        remoteStatus.textContent = "Keine gültigen Wörter gefunden.";
+                        return;
+                    }
+                    
+                    sendWordsBtn.disabled = true;
+                    remoteStatus.textContent = "Sende...";
+                    try {
+                        const sessionDocRef = doc(db, "sessions", sessionId);
+                        await setDoc(sessionDocRef, { words: words }, { merge: true });
+                        remoteStatus.textContent = "Erfolg! Wörter gesendet.";
+                        remoteStatus.classList.add('text-green-400');
+                    } catch (error) {
+                        remoteStatus.textContent = "Fehler beim Senden.";
+                        console.error(error);
+                        sendWordsBtn.disabled = false;
+                    }
+                });
+            } else {
+                // This is the main app view
+                resetHangmanState(); 
+                resetArticleGameState(); 
+                resetQuizState(); 
+                loadData(); 
+            }
         });
     </script>
 </body>
 </html>
-
-
-
-
-
 
