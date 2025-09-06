@@ -50,7 +50,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 50%, transparent 50%);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 50%, transparent 50%);
             background-size: 100% 4px;
             pointer-events: none;
         }
@@ -59,9 +59,9 @@
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
 
         .pixel-box {
-            background-color: #1a1c2c;
-            border: 4px solid #4a5073;
-            box-shadow: inset 0 0 0 4px #0a0a0a;
+            background-color: #2c3048;
+            border: 4px solid #f0f0f0;
+            box-shadow: inset 0 0 0 4px #1a1c2c;
         }
 
         .pixel-btn {
@@ -97,26 +97,31 @@
 
         .pixel-input, select.pixel-input, textarea.pixel-input {
             background-color: #0a0a0a;
-            border: 4px solid #4a5073;
+            border: 4px solid #f0f0f0;
             box-shadow: inset 4px 4px 0px 0px #000;
             color: #f0f0f0;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
         
-        select.pixel-input {
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27292.4%27%20height%3D%27292.4%27%3E%3Cpath%20fill%3D%27%23f0f0f0%27%20d%3D%27M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-13%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2013l128%20127.9c3.6%203.6%207.8%205.4%2013%205.4s9.4-1.8%2013-5.4L287%2095.2c3.5-3.5%205.4-7.8%205.4-13%200-5-1.9-9.4-5.4-13z%27%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat;
-            background-position: right .7em top 50%;
-            background-size: .65em auto;
-            padding-right: 2em;
-        }
-
         .pixel-input:focus { outline: none; border-color: var(--accent-color); }
 
         * { border-radius: 0 !important; }
 
         #hangman-drawing { shape-rendering: pixelated; }
-        #hangman-drawing line, #hangman-drawing circle { stroke-width: 6px; }
+        #hangman-drawing .gallow { stroke: #9ca3af; stroke-width: 6px; }
+        #hangman-drawing .hangman-part { visibility: hidden; } /* Start hidden by default */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+        .shake-figure { animation: shake 0.2s linear; }
+        
+        @keyframes explosion-animation {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .exploding {
+            animation: explosion-animation 0.3s ease-out forwards;
+        }
+
         .keyboard-btn { box-shadow: inset -2px -2px 0px 0px #3a6ab1; }
         
         #random-person-animation-container { transition: none; }
@@ -127,7 +132,7 @@
             backdrop-filter: none;
             background-color: #2c3048;
             border: 4px solid #f0f0f0;
-            box-shadow: 0 0 20px var(--accent-glow), inset 0 0 15px rgba(0,0,0,0.5);
+            box-shadow: 0 0 20px var(--accent-glow);
         }
         
         .game-mode-btn { border: 4px solid #f0f0f0; }
@@ -155,8 +160,10 @@
         
         @keyframes defeat-shake-fall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 10% { transform: translate(-2px, 0) rotate(-5deg); } 20% { transform: translate(2px, 0) rotate(5deg); } 30% { transform: translate(-2px, 0) rotate(-5deg); } 40% { transform: translate(2px, 0) rotate(5deg); } 50% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(0, 50px) rotate(20deg); opacity: 0; } }
         .is-defeated { animation: defeat-shake-fall 1.5s ease-in-out forwards; transform-origin: 70px 35px; }
-        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid var(--accent-color); width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        @keyframes flip-in { 0% { transform: rotateX(90deg); opacity: 0; } 100% { transform: rotateX(0deg); opacity: 1; } }
+        .letter-reveal { animation: flip-in 0.5s ease; }
+
         .hidden { display: none; }
     </style>
 </head>
@@ -217,16 +224,6 @@
                 </div>
 
                 <div id="games-container" class="hidden">
-                    <div class="text-center mb-6">
-                        <h2 class="text-2xl mb-4 text-glow">Wähle ein Spiel</h2>
-                        <p class="text-xs text-gray-400 mb-4 -mt-3">(Quiz & Artikel-Raten benötigen eine Internetverbindung)</p>
-                        <div class="flex flex-wrap justify-center gap-4">
-                            <button id="select-hangman-btn" class="pixel-btn active p-4">Galgenmännchen</button>
-                            <button id="select-article-btn" class="pixel-btn p-4">Artikel-Raten</button>
-                            <button id="select-quiz-btn" class="pixel-btn p-4">KI-Quiz</button>
-                        </div>
-                    </div>
-
                     <div id="hangman-wrapper">
                         <div class="pixel-box p-6">
                             <div class="text-center mb-6 relative">
@@ -236,7 +233,7 @@
                             <div id="hangman-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#0a0a0a]">
                                 <h3 class="text-lg text-center -mb-2">Settings</h3>
                                 <div class="flex-1">
-                                    <label class="mb-2 block text-center text-sm">1. Modus</label>
+                                    <label class="mb-2 block text-center text-sm">Modus</label>
                                     <div class="grid grid-cols-2 gap-2">
                                         <button id="single-player-btn" class="game-mode-btn active p-2 text-sm">Einzel</button>
                                         <button id="team-mode-btn" class="game-mode-btn p-2 text-sm">Team</button>
@@ -246,17 +243,65 @@
                                     <label for="num-teams-input" class="mb-2 block text-center text-sm">Teams</label>
                                     <input type="number" id="num-teams-input" value="2" min="2" class="pixel-input w-full p-2 text-center">
                                 </div>
-                                <button id="custom-word-btn" class="pixel-btn pixel-btn-yellow w-full p-3 text-sm mt-2">Spiel mit QR-Code starten</button>
+                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                    <button id="direct-word-btn" class="pixel-btn w-full p-3 text-sm">Wort eingeben</button>
+                                    <button id="custom-word-btn" class="pixel-btn pixel-btn-yellow w-full p-3 text-sm">QR-Code Spiel</button>
+                                </div>
                             </div>
                             <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6"></div>
                             <div id="hangman-game" class="flex flex-col items-center gap-4 opacity-25 pointer-events-none">
                                 <div class="relative w-48 h-56 mb-4">
                                     <svg id="hangman-drawing" viewBox="0 0 100 120" class="w-full h-full">
-                                        <line x1="20" y1="110" x2="80" y2="110" stroke="#9ca3af" /> <line x1="30" y1="110" x2="30" y2="10" stroke="#9ca3af" /> <line x1="30" y1="10" x2="70" y2="10" stroke="#9ca3af" /> <line x1="70" y1="10" x2="70" y2="25" stroke="#9ca3af" />
-                                        <g id="hangman-figure"><circle class="hangman-part" cx="70" cy="35" r="10" stroke="white" fill="none" /> <line class="hangman-part" x1="70" y1="45" x2="70" y2="75" stroke="white" /> <line class="hangman-part" x1="70" y1="55" x2="55" y2="70" stroke="white" /> <line class="hangman-part" x1="70" y1="55" x2="85" y2="70" stroke="white" /> <line class="hangman-part" x1="70" y1="75" x2="55" y2="90" stroke="white" /> <line class="hangman-part" x1="70" y1="75" x2="85" y2="90" stroke="white" /></g>
+                                        <defs>
+                                            <g id="explosion-sprite">
+                                                <rect x="-8" y="-8" width="4" height="4" fill="#FFD700" />
+                                                <rect x="4" y="-8" width="4" height="4" fill="#FFA500" />
+                                                <rect x="-8" y="4" width="4" height="4" fill="#FF4500" />
+                                                <rect x="4" y="4" width="4" height="4" fill="#FFD700" />
+                                                <rect x="-2" y="-12" width="4" height="4" fill="#FFA500" />
+                                                <rect x="-2" y="8" width="4" height="4" fill="#FF6347" />
+                                                <rect x="-12" y="-2" width="4" height="4" fill="#FF4500" />
+                                                <rect x="8" y="-2" width="4" height="4" fill="#FFA500" />
+                                            </g>
+                                        </defs>
+                                        <g class="gallow">
+                                            <line x1="20" y1="110" x2="80" y2="110" /> 
+                                            <line x1="30" y1="110" x2="30" y2="10" /> 
+                                            <line x1="25" y1="10" x2="70" y2="10" /> 
+                                            <line x1="70" y1="10" x2="70" y2="25" />
+                                        </g>
+                                        <!-- --- MODIFIED: New Astronaut Figure --- -->
+                                        <g id="hangman-figure">
+                                            <g id="astro-leg-right" class="hangman-part" transform="translate(68, 68) scale(1.5)">
+                                                <rect x="4" y="0" width="7" height="7" fill="#bdc3c7"/><rect x="10" y="0" width="1" height="7" fill="#7f8c8d"/><rect x="4" y="7" width="8" height="2" fill="#7f8c8d"/><rect x="3" y="9" width="10" height="6" fill="#7f8c8d"/><rect x="4" y="9" width="8" height="5" fill="#2c3e50"/><rect x="3" y="14" width="10" height="1" fill="#3498db"/>
+                                            </g>
+                                            <g id="astro-leg-left" class="hangman-part" transform="translate(52, 68) scale(1.5)">
+                                                 <rect x="4" y="0" width="7" height="7" fill="#bdc3c7"/><rect x="10" y="0" width="1" height="7" fill="#7f8c8d"/><rect x="4" y="7" width="8" height="2" fill="#7f8c8d"/><rect x="3" y="9" width="10" height="6" fill="#7f8c8d"/><rect x="4" y="9" width="8" height="5" fill="#2c3e50"/><rect x="3" y="14" width="10" height="1" fill="#3498db"/>
+                                            </g>
+                                            <g id="astro-arm-right" class="hangman-part" transform="translate(78, 44) scale(1.5)">
+                                                <rect x="4" y="0" width="8" height="5" fill="#7f8c8d"/><rect x="5" y="1" width="6" height="3" fill="#bdc3c7"/><rect x="6" y="1" width="4" height="1" fill="#ecf0f1"/><rect x="5" y="5" width="6" height="5" fill="#bdc3c7"/><rect x="10" y="5" width="1" height="5" fill="#7f8c8d"/><rect x="4" y="10" width="8" height="4" fill="#7f8c8d"/><rect x="5" y="11" width="6" height="2" fill="#2c3e50"/>
+                                            </g>
+                                            <g id="astro-arm-left" class="hangman-part" transform="translate(42, 44) scale(1.5)">
+                                                <rect x="4" y="0" width="8" height="5" fill="#7f8c8d"/><rect x="5" y="1" width="6" height="3" fill="#bdc3c7"/><rect x="6" y="1" width="4" height="1" fill="#ecf0f1"/><rect x="5" y="5" width="6" height="5" fill="#bdc3c7"/><rect x="10" y="5" width="1" height="5" fill="#7f8c8d"/><rect x="4" y="10" width="8" height="4" fill="#7f8c8d"/><rect x="5" y="11" width="6" height="2" fill="#2c3e50"/>
+                                            </g>
+                                            <g id="astro-body" class="hangman-part" transform="translate(60, 40) scale(1.5)">
+                                                <rect x="2" y="2" width="12" height="12" fill="#7f8c8d"/><rect x="3" y="1" width="10" height="13" fill="#bdc3c7"/><rect x="4" y="1" width="7" height="13" fill="#ecf0f1"/><rect x="5" y="4" width="6" height="5" fill="#7f8c8d"/><rect x="6" y="5" width="4" height="3" fill="#2c3e50"/><rect x="6" y="6" width="1" height="1" fill="#e74c3c"/><rect x="8" y="6" width="2" height="1" fill="#3498db"/>
+                                            </g>
+                                            <g id="astro-head" class="hangman-part" transform="translate(62, 23) scale(1.5)">
+                                                <rect x="5" y="2" width="6" height="1" fill="#ecf0f1"/>
+                                                <rect x="4" y="3" width="8" height="1" fill="#ecf0f1"/>
+                                                <rect x="3" y="4" width="10" height="7" fill="#bdc3c7"/>
+                                                <rect x="4" y="11" width="8" height="1" fill="#7f8c8d"/>
+                                                <rect x="12" y="5" width="1" height="5" fill="#7f8c8d"/>
+                                                <rect x="4" y="5" width="8" height="5" fill="#2c3e50"/>
+                                                <rect x="5" y="6" width="2" height="1" fill="#ecf0f1"/><rect x="5" y="7" width="1" height="1" fill="#bdc3c7"/>
+                                                <rect x="2" y="6" width="1" height="3" fill="#bdc3c7"/><rect x="1" y="7" width="1" height="1" fill="#7f8c8d"/>
+                                            </g>
+                                        </g>
+                                        <g id="explosions-container"></g>
                                     </svg>
                                 </div>
-                                <p id="hangman-word" class="text-3xl tracking-widest"></p>
+                                <div id="hangman-word" class="flex gap-2 text-3xl tracking-widest"></div>
                                 <div class="text-center text-sm"><p>Falsch:</p><p id="hangman-wrong-letters" class="text-red-400 min-h-[28px]"></p></div>
                                 <div id="hangman-keyboard" class="flex flex-wrap justify-center gap-2 max-w-lg"></div>
                                 <div id="hangman-message" class="text-2xl text-center min-h-[40px]"></div>
@@ -264,40 +309,6 @@
                                     <button id="guess-word-btn" class="pixel-btn p-2 text-sm">Wort raten</button>
                                     <button id="next-round-btn" class="pixel-btn pixel-btn-green p-2 text-sm hidden">Nächste Runde</button>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="article-guesser-wrapper" class="hidden">
-                         <div class="pixel-box p-6">
-                            <div class="text-center mb-6"><h2 class="text-2xl text-glow">Artikel-Raten</h2></div>
-                            <div id="article-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#0a0a0a]">
-                                <h3 class="text-lg text-center -mb-2">Settings</h3>
-                                <div class="flex-1"><label class="mb-2 block text-center text-sm">Thema</label><input type="text" id="article-topic-input" placeholder="Thema (z.B. Küche)" class="pixel-input w-full p-2 text-sm"></div>
-                                <button id="article-generate-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center"><span id="article-generate-btn-text">START</span><div id="article-generate-spinner" class="spinner hidden ml-2"></div></button>
-                            </div>
-                            <div id="article-game" class="flex flex-col items-center gap-6 opacity-25 pointer-events-none">
-                                <div class="text-center"><p id="article-game-message" class="text-2xl text-center min-h-[64px]"></p><p id="article-word-display" class="text-4xl my-4 min-h-[50px]"></p></div>
-                                <div id="article-choices" class="flex gap-4"><button data-article="DER" class="article-btn pixel-btn p-6 text-2xl">DER</button><button data-article="DIE" class="article-btn pixel-btn-red p-6 text-2xl">DIE</button><button data-article="DAS" class="article-btn pixel-btn-green p-6 text-2xl">DAS</button></div>
-                                <div id="article-scoreboard" class="flex gap-4 mt-4 text-lg"><div>Richtig: <span id="article-score-correct">0</span></div><div>Falsch: <span id="article-score-wrong">0</span></div></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="quiz-wrapper" class="hidden">
-                        <div class="pixel-box p-6">
-                            <div class="text-center mb-6"><h2 class="text-2xl text-glow">KI-Quiz</h2></div>
-                            <div id="quiz-controls" class="flex flex-col gap-4 mb-6 p-4 bg-[#0a0a0a]">
-                                <h3 class="text-lg text-center -mb-2">Settings</h3>
-                                <div class="flex-1"><label class="mb-2 block text-center text-sm">Thema</label><input type="text" id="quiz-topic-input" placeholder="Thema (z.B. Deutsche Geschichte)" class="pixel-input w-full p-2 text-sm"></div>
-                                <button id="quiz-generate-btn" class="pixel-btn w-full p-3 text-sm mt-2 flex justify-center items-center"><span id="quiz-generate-btn-text">START</span><div id="quiz-generate-spinner" class="spinner hidden ml-2"></div></button>
-                            </div>
-                            <div id="quiz-game" class="flex flex-col items-center gap-6 opacity-25 pointer-events-none">
-                                <div class="w-full text-center"><p id="quiz-progress" class="text-sm mb-2"></p><div class="pixel-box p-4 bg-[#0a0a0a]"><p id="quiz-question" class="text-lg min-h-[60px]"></p></div></div>
-                                <div id="quiz-options" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                                <p id="quiz-message" class="text-2xl text-center min-h-[40px]"></p>
-                                <div id="quiz-scoreboard" class="flex gap-4 mt-4 text-lg"><div>Richtig: <span id="quiz-score-correct">0</span></div><div>Falsch: <span id="quiz-score-wrong">0</span></div></div>
-                                <button id="quiz-next-btn" class="pixel-btn pixel-btn-green p-3 text-sm hidden">Nächste Frage</button>
                             </div>
                         </div>
                     </div>
@@ -313,11 +324,26 @@
             </div>
         </div>
         
+        <div id="direct-word-modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+            <div class="pixel-box p-6 w-full max-w-md text-center modal-content">
+                <h3 class="text-lg mb-4 text-glow">Geheimes Wort eingeben</h3>
+                <p class="mb-4 text-sm">Das Wort ist für die Schüler nicht sichtbar.</p>
+                <div class="flex items-center gap-2">
+                    <input type="password" id="direct-word-input" class="pixel-input w-full p-2 text-center text-xl uppercase tracking-widest">
+                    <button id="toggle-word-visibility" class="pixel-btn p-2 text-sm">[?]</button>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button id="start-direct-word-game-btn" class="pixel-btn w-full p-2 text-sm">Start</button>
+                    <button id="cancel-direct-word-btn" class="pixel-btn pixel-btn-red w-full p-2 text-sm">Abbrechen</button>
+                </div>
+            </div>
+        </div>
+
         <div id="rules-modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none">
             <div class="pixel-box p-6 w-full max-w-lg text-left modal-content">
                 <div class="flex justify-between items-center mb-4"><h3 class="text-lg">Spielregeln</h3><button id="close-rules-btn" class="pixel-btn pixel-btn-red px-2 py-1">&times;</button></div>
                 <div class="space-y-4 text-sm">
-                    <div><h4 class="text-cyan-400">Allgemein</h4><ul class="list-disc pl-5"><li>Errate das Wort, bevor der Galgenmann komplett ist (6 Fehler).</li></ul></div>
+                    <div><h4 class="text-cyan-400">Allgemein</h4><ul class="list-disc pl-5"><li>Errate das Wort, bevor der Astronaut komplett zerstört ist (6 Fehler).</li></ul></div>
                     <div><h4 class="text-cyan-400">Einzelspieler</h4><ul class="list-disc pl-5"><li>Versuche, alle Wörter der Runde zu erraten.</li></ul></div>
                     <div><h4 class="text-cyan-400">Team-Modus</h4><ul class="list-disc pl-5"><li>Teams raten abwechselnd. Falsch = Nächstes Team.</li><li><b>Punkte:</b><ul class="list-['-_'] ml-4"><li><b>+5 Pkt.</b> pro richtiger Buchstabe.</li><li><b>+10 Bonus</b> für erratenes Wort.</li><li><b>+25 Bonus</b> für "Wort raten".</li></ul></li></ul></div>
                 </div>
@@ -379,7 +405,7 @@
         let isSoundOn = true;
         const soundToggleBtn = document.getElementById('sound-toggle-btn');
         function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.error("Web Audio API is not supported"); isSoundOn = false; soundToggleBtn.textContent = 'Sound: N/A'; soundToggleBtn.disabled = true; } } }
-        function playSound(type) { if (!isSoundOn || !audioCtx || audioCtx.state === 'suspended') return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type = 'square'; switch(type) { case 'click': o.frequency.setValueAtTime(440, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.1); break; case 'correct': o.frequency.setValueAtTime(523.25, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'wrong': o.frequency.setValueAtTime(220, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'win': o.frequency.setValueAtTime(523.25, audioCtx.currentTime); o.frequency.linearRampToValueAtTime(1046.5, audioCtx.currentTime + 0.2); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'defeat': o.frequency.setValueAtTime(300, audioCtx.currentTime); o.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.4); g.gain.setValueAtTime(0.2, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.4); break; } o.start(); o.stop(audioCtx.currentTime + 1); }
+        function playSound(type) { if (!isSoundOn || !audioCtx || audioCtx.state === 'suspended') return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type = 'square'; switch(type) { case 'click': o.frequency.setValueAtTime(440, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.1); break; case 'correct': o.frequency.setValueAtTime(523.25, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'wrong': o.frequency.setValueAtTime(220, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'win': o.frequency.setValueAtTime(523.25, audioCtx.currentTime); o.frequency.linearRampToValueAtTime(1046.5, audioCtx.currentTime + 0.2); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.2); break; case 'defeat': o.frequency.setValueAtTime(300, audioCtx.currentTime); o.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.4); g.gain.setValueAtTime(0.2, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.4); break; case 'explosion': o.type = 'noise'; g.gain.setValueAtTime(0.3, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(1e-4, audioCtx.currentTime + 0.5); break; } o.start(); o.stop(audioCtx.currentTime + 1); }
         if (soundToggleBtn) soundToggleBtn.addEventListener('click', () => { initAudio(); if (!audioCtx) return; isSoundOn = !isSoundOn; soundToggleBtn.textContent = isSoundOn ? 'Sound: ON' : 'Sound: OFF'; if(isSoundOn) { if (audioCtx.state === 'suspended') { audioCtx.resume(); } playSound('click'); } });
         document.body.addEventListener('click', initAudio, { once: true });
 
@@ -387,12 +413,11 @@
         const starfieldCanvas = document.getElementById('starfield');
         const starfieldCtx = starfieldCanvas.getContext('2d');
         let stars = [];
-        function resizeStarfield() { starfieldCanvas.width = window.innerWidth; starfieldCanvas.height = window.innerHeight; }
-        function createStars() { stars = []; const numStars = window.innerWidth < 768 ? 100 : 200; for(let i = 0; i < numStars; i++) { stars.push({ x: Math.random() * starfieldCanvas.width, y: Math.random() * starfieldCanvas.height, size: Math.random() * 2 + 1, speed: Math.random() * 0.5 + 0.1 }); } }
+        function resizeStarfield() { if(starfieldCanvas) {starfieldCanvas.width = window.innerWidth; starfieldCanvas.height = window.innerHeight;} }
+        function createStars() { stars = []; if(!starfieldCanvas) return; const numStars = window.innerWidth < 768 ? 100 : 200; for(let i = 0; i < numStars; i++) { stars.push({ x: Math.random() * starfieldCanvas.width, y: Math.random() * starfieldCanvas.height, size: Math.random() * 2 + 1, speed: Math.random() * 0.5 + 0.1 }); } }
         function drawStars() { if (!starfieldCanvas || starfieldCanvas.width === 0) return; starfieldCtx.clearRect(0, 0, starfieldCanvas.width, starfieldCanvas.height); starfieldCtx.fillStyle = '#f0f0f0'; stars.forEach(s => { s.y += s.speed; if(s.y > starfieldCanvas.height) { s.y = 0; s.x = Math.random() * starfieldCanvas.width; } starfieldCtx.fillRect(s.x, s.y, s.size, s.size); }); requestAnimationFrame(drawStars); }
         window.addEventListener('resize', () => { resizeStarfield(); createStars(); });
-        if(starfieldCanvas) { resizeStarfield(); createStars(); drawStars(); }
-
+        
         // --- CORE APP LOGIC ---
         const studentForm = document.getElementById('student-form');
         const studentInput = document.getElementById('student-name-input');
@@ -433,32 +458,27 @@
         if (toolsTabBtn) toolsTabBtn.addEventListener('click', () => { playSound('click'); toolsContainer.classList.remove('hidden'); gamesContainer.classList.add('hidden'); toolsTabBtn.classList.add('active'); gamesTabBtn.classList.remove('active'); });
         if (gamesTabBtn) gamesTabBtn.addEventListener('click', () => { playSound('click'); toolsContainer.classList.add('hidden'); gamesContainer.classList.remove('hidden'); toolsTabBtn.classList.remove('active'); gamesTabBtn.classList.add('active'); });
         
-        // --- GAME LOGIC ---
-        const hangmanWrapper = document.getElementById('hangman-wrapper'), articleGuesserWrapper = document.getElementById('article-guesser-wrapper'), quizWrapper = document.getElementById('quiz-wrapper'), selectHangmanBtn = document.getElementById('select-hangman-btn'), selectArticleBtn = document.getElementById('select-article-btn'), selectQuizBtn = document.getElementById('select-quiz-btn');
-        function switchGameView(wrapper, btn) { playSound('click'); [hangmanWrapper, articleGuesserWrapper, quizWrapper].forEach(w => w.classList.add('hidden')); [selectHangmanBtn, selectArticleBtn, selectQuizBtn].forEach(b => b.classList.remove('active')); wrapper.classList.remove('hidden'); btn.classList.add('active'); }
-        if (selectHangmanBtn) selectHangmanBtn.addEventListener('click', () => switchGameView(hangmanWrapper, selectHangmanBtn));
-        if (selectArticleBtn) selectArticleBtn.addEventListener('click', () => switchGameView(articleGuesserWrapper, selectArticleBtn));
-        if (selectQuizBtn) selectQuizBtn.addEventListener('click', () => switchGameView(quizWrapper, selectQuizBtn));
-        async function callGenerativeAI(prompt, btn, spinner, textEl, messageEl) { const apiKey = "AIzaSyBiKsGhYowy01R8gBLJqYQXeiXL-sFTZzA"; btn.disabled = true; textEl.textContent = 'Generiere...'; spinner.classList.remove('hidden'); messageEl.textContent = 'KI generiert Inhalt...'; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`; try { const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error?.message || `API error: ${response.status}`); } const result = await response.json(); const text = result.candidates?.[0]?.content?.parts?.[0]?.text; if (!text) throw new Error('Keine Inhalte von der KI erhalten.'); return text; } catch (error) { console.error('AI Error:', error); messageEl.textContent = `Fehler: ${error.message}`; return null; } finally { btn.disabled = false; spinner.classList.add('hidden'); } }
-
         // --- HANGMAN GAME ---
         const hangmanGameEl = document.getElementById('hangman-game'), customWordBtn = document.getElementById('custom-word-btn'), hangmanWordEl = document.getElementById('hangman-word'), hangmanFigure = document.getElementById('hangman-figure'), hangmanParts = hangmanFigure.querySelectorAll('.hangman-part'), hangmanWrongLettersEl = document.getElementById('hangman-wrong-letters'), hangmanKeyboardEl = document.getElementById('hangman-keyboard'), hangmanMessageEl = document.getElementById('hangman-message'), scoreboardEl = document.getElementById('scoreboard'), guessWordBtn = document.getElementById('guess-word-btn'), nextRoundBtn = document.getElementById('next-round-btn'), singlePlayerBtn = document.getElementById('single-player-btn'), teamModeBtn = document.getElementById('team-mode-btn'), numTeamsContainer = document.getElementById('num-teams-container'), numTeamsInput = document.getElementById('num-teams-input'), guessWordModal = document.getElementById('guess-word-modal'), guessWordInput = document.getElementById('guess-word-input'), submitGuessBtn = document.getElementById('submit-guess-btn'), cancelGuessBtn = document.getElementById('cancel-guess-btn'), rulesBtn = document.getElementById('rules-btn'), rulesModal = document.getElementById('rules-modal'), closeRulesBtn = document.getElementById('close-rules-btn'), qrCodeModal = document.getElementById('qr-code-modal'), qrCodeContainer = document.getElementById('qr-code-container'), qrStatus = document.getElementById('qr-status'), cancelQrBtn = document.getElementById('cancel-qr-btn');
+        const directWordModal = document.getElementById('direct-word-modal'), directWordBtn = document.getElementById('direct-word-btn'), directWordInput = document.getElementById('direct-word-input'), toggleWordVisibilityBtn = document.getElementById('toggle-word-visibility'), startDirectWordGameBtn = document.getElementById('start-direct-word-game-btn'), cancelDirectWordBtn = document.getElementById('cancel-direct-word-btn');
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'.split(''), maxWrongGuesses = 6;
+        const destructionOrder = ['astro-leg-right', 'astro-leg-left', 'astro-arm-right', 'astro-arm-left', 'astro-body', 'astro-head'];
         let gameMode = 'single', hangmanState = {}, qrCode, unsubscribe;
         if (singlePlayerBtn) singlePlayerBtn.addEventListener('click', () => { playSound('click'); gameMode = 'single'; singlePlayerBtn.classList.add('active'); teamModeBtn.classList.remove('active'); numTeamsContainer.classList.add('hidden'); });
         if (teamModeBtn) teamModeBtn.addEventListener('click', () => { playSound('click'); gameMode = 'team'; teamModeBtn.classList.add('active'); singlePlayerBtn.classList.remove('active'); numTeamsContainer.classList.remove('hidden'); });
         function resetHangmanState() { hangmanState = { teams: [], currentTeamIndex: 0, selectedWord: '', correctLetters: [], wrongLetters: [], isRoundOver: true, wordList: [], currentWordIndex: 0, }; }
         function startHangmanGame(words) { playSound('click'); if(!words || words.length === 0) { alert("Keine Wörter zum Spielen erhalten."); return; } hangmanGameEl.classList.add('opacity-25', 'pointer-events-none'); scoreboardEl.innerHTML = ''; resetHangmanState(); if (gameMode === 'single') { hangmanState.teams = [{ id: 0, name: 'Spieler 1', score: 0 }]; } else { const numTeams = parseInt(numTeamsInput.value, 10); if (isNaN(numTeams) || numTeams < 2) { alert("Ungültige Team-Anzahl."); return; } hangmanState.teams = Array.from({ length: numTeams }, (_, i) => ({ id: i, name: `Team ${i + 1}`, score: 0 })); } hangmanState.wordList = words; startNewHangmanRound(); }
-        function startNewHangmanRound() { if (hangmanState.currentWordIndex >= hangmanState.wordList.length) { endHangmanGame(); return; } hangmanState.selectedWord = hangmanState.wordList[hangmanState.currentWordIndex]; hangmanState.currentWordIndex++; hangmanState.correctLetters = []; hangmanState.wrongLetters = []; hangmanState.isRoundOver = false; hangmanGameEl.classList.remove('opacity-25', 'pointer-events-none'); hangmanFigure.classList.remove('is-defeated'); hangmanParts.forEach(p => p.style.visibility = 'hidden'); hangmanMessageEl.textContent = ''; nextRoundBtn.classList.add('hidden'); guessWordBtn.classList.remove('hidden'); displayHangmanWord(); updateWrongLetters(); createKeyboard(); renderScoreboard(); }
+        function startNewHangmanRound() { if (hangmanState.currentWordIndex >= hangmanState.wordList.length) { endHangmanGame(); return; } hangmanState.selectedWord = hangmanState.wordList[hangmanState.currentWordIndex]; hangmanState.currentWordIndex++; hangmanState.correctLetters = []; hangmanState.wrongLetters = []; hangmanState.isRoundOver = false; hangmanGameEl.classList.remove('opacity-25', 'pointer-events-none'); hangmanFigure.classList.remove('is-defeated', 'shake-figure'); document.getElementById('explosions-container').innerHTML = ''; hangmanParts.forEach(p => p.style.visibility = 'visible'); hangmanMessageEl.textContent = ''; nextRoundBtn.classList.add('hidden'); guessWordBtn.classList.remove('hidden'); displayHangmanWord(); updateWrongLetters(); createKeyboard(); renderScoreboard(); }
         function renderScoreboard() { scoreboardEl.innerHTML = ''; if (hangmanState.teams.length <= 1) return; hangmanState.teams.forEach((team, index) => { const card = document.createElement('div'); card.classList.add('team-card', 'pixel-box', 'p-3', 'text-center'); if (index === hangmanState.currentTeamIndex) { card.classList.add('current-turn'); } card.innerHTML = `<p class="text-sm">${team.name}</p><p id="score-${team.id}" class="text-xl">${team.score}</p>`; scoreboardEl.appendChild(card); }); }
-        function displayHangmanWord() { if (!hangmanState.selectedWord) return; hangmanWordEl.innerHTML = hangmanState.selectedWord.split('').map(l => `<span>${hangmanState.correctLetters.includes(l) ? l : '_'}</span>`).join(''); const inner = hangmanWordEl.innerText.replace(/\s/g, ''); if (!hangmanState.isRoundOver && inner === hangmanState.selectedWord) { awardPoints(10); endHangmanRound(true); } }
-        function updateWrongLetters() { hangmanWrongLettersEl.textContent = `${hangmanState.wrongLetters.join(', ')}`; hangmanParts.forEach((p, i) => { if (i < hangmanState.wrongLetters.length) p.style.visibility = 'visible'; }); if (!hangmanState.isRoundOver && hangmanState.wrongLetters.length >= maxWrongGuesses) { endHangmanRound(false); } }
+        function displayHangmanWord(newlyGuessedLetter = null) { hangmanWordEl.innerHTML = ''; hangmanState.selectedWord.split('').forEach(letter => { const letterSpan = document.createElement('span'); letterSpan.classList.add('inline-block', 'w-8', 'text-center', 'border-b-4', 'border-gray-400'); if (hangmanState.correctLetters.includes(letter)) { letterSpan.textContent = letter; if (letter === newlyGuessedLetter) { letterSpan.classList.add('letter-reveal'); } } else { letterSpan.textContent = '_'; letterSpan.classList.add('text-transparent');} hangmanWordEl.appendChild(letterSpan); }); const inner = hangmanState.selectedWord.split('').every(l => hangmanState.correctLetters.includes(l)); if (!hangmanState.isRoundOver && inner) { awardPoints(10); endHangmanRound(true); } }
+        function updateWrongLetters() { hangmanWrongLettersEl.textContent = `${hangmanState.wrongLetters.join(', ')}`; const wrongCount = hangmanState.wrongLetters.length; if (wrongCount > 0) { const partToDestroyId = destructionOrder[wrongCount - 1]; const partElement = document.getElementById(partToDestroyId); if (partElement) { partElement.style.visibility = 'hidden'; triggerExplosion(partElement); playSound('explosion'); } } if (!hangmanState.isRoundOver && wrongCount >= maxWrongGuesses) { endHangmanGame(false); } }
         function createKeyboard() { hangmanKeyboardEl.innerHTML = ''; alphabet.forEach(l => { const btn = document.createElement('button'); btn.textContent = l; btn.classList.add('keyboard-btn', 'pixel-btn', 'py-2', 'px-3', 'text-sm'); btn.addEventListener('click', () => handleGuess(l, btn)); hangmanKeyboardEl.appendChild(btn); }); }
-        function handleGuess(l, btn) { if (hangmanState.isRoundOver) return; btn.disabled = true; const u_l = l.toUpperCase(); if (hangmanState.selectedWord.includes(u_l)) { playSound('correct'); if (!hangmanState.correctLetters.includes(u_l)) { hangmanState.correctLetters.push(u_l); awardPoints(5 * hangmanState.selectedWord.split(u_l).length - 1); displayHangmanWord(); } } else { playSound('wrong'); if (!hangmanState.wrongLetters.includes(u_l)) { hangmanState.wrongLetters.push(u_l); updateWrongLetters(); changeTurn(); } } }
+        function handleGuess(l, btn) { if (hangmanState.isRoundOver) return; btn.disabled = true; btn.style.opacity = '0.3'; const u_l = l.toUpperCase(); if (hangmanState.selectedWord.includes(u_l)) { playSound('correct'); if (!hangmanState.correctLetters.includes(u_l)) { hangmanState.correctLetters.push(u_l); awardPoints(5 * hangmanState.selectedWord.split(u_l).length - 1); displayHangmanWord(u_l); } } else { playSound('wrong'); if (!hangmanState.wrongLetters.includes(u_l)) { hangmanState.wrongLetters.push(u_l); updateWrongLetters(); changeTurn(); } } }
+        function triggerExplosion(partElement) { const explosionsContainer = document.getElementById('explosions-container'); const bbox = partElement.getBBox(); const centerX = bbox.x + bbox.width / 2; const centerY = bbox.y + bbox.height / 2; const explosion = document.createElementNS('http://www.w3.org/2000/svg', 'use'); explosion.setAttribute('href', '#explosion-sprite'); explosion.setAttribute('transform', `translate(${centerX} ${centerY})`); explosion.classList.add('exploding'); explosionsContainer.appendChild(explosion); setTimeout(() => { if (explosion.parentNode) { explosionsContainer.removeChild(explosion); } }, 300); }
         function changeTurn() { if (hangmanState.teams.length <= 1) return; hangmanState.currentTeamIndex = (hangmanState.currentTeamIndex + 1) % hangmanState.teams.length; renderScoreboard(); }
         function awardPoints(p) { if (hangmanState.teams.length === 0) return; const team = hangmanState.teams[hangmanState.currentTeamIndex]; team.score += p; const el = document.getElementById(`score-${team.id}`); if (el) { el.textContent = team.score; } }
         function endHangmanRound(isWin) { hangmanState.isRoundOver = true; hangmanKeyboardEl.querySelectorAll('.keyboard-btn').forEach(btn => btn.disabled = true); guessWordBtn.classList.add('hidden'); if (isWin) { playSound('win'); const n = hangmanState.teams.length > 1 ? hangmanState.teams[hangmanState.currentTeamIndex].name : 'Du hast'; hangmanMessageEl.innerHTML = `<span class="text-cyan-400">${n} GEWONNEN!</span>`; nextRoundBtn.classList.remove('hidden'); } else { playSound('defeat'); hangmanFigure.classList.add('is-defeated'); hangmanMessageEl.textContent = `VERLOREN! Wort: ${hangmanState.selectedWord}`; setTimeout(() => { nextRoundBtn.classList.remove('hidden'); }, 1500); } }
-        function endHangmanGame() { let msg = ''; if (hangmanState.teams.length > 1) { const winner = hangmanState.teams.reduce((p, c) => (p.score > c.score) ? p : c); msg = `${winner.name} gewinnt!`; } else { msg = 'Alle Wörter gespielt!'; } hangmanMessageEl.innerHTML = `<span class="text-2xl text-yellow-300">SPIELENDE!</span><br>${msg}`; nextRoundBtn.classList.add('hidden'); guessWordBtn.classList.add('hidden'); }
+        function endHangmanGame(isWin) { hangmanState.isRoundOver = true; hangmanKeyboardEl.querySelectorAll('.keyboard-btn').forEach(btn => btn.disabled = true); guessWordBtn.classList.add('hidden'); if(isWin === false) { endHangmanRound(false); return;} let msg = ''; if (hangmanState.teams.length > 1) { const winner = hangmanState.teams.reduce((p, c) => (p.score > c.score) ? p : c); msg = `${winner.name} gewinnt!`; } else { msg = 'Alle Wörter gespielt!'; } hangmanMessageEl.innerHTML = `<span class="text-2xl text-yellow-300">SPIELENDE!</span><br>${msg}`; nextRoundBtn.classList.add('hidden'); }
         function openModal(m) { playSound('click'); m.classList.remove('opacity-0', 'pointer-events-none'); }
         function closeModal(m) { playSound('click'); m.classList.add('opacity-0', 'pointer-events-none'); }
         function handleWordGuess() { const guess = guessWordInput.value.trim().toUpperCase(); if (!guess) return; if (guess === hangmanState.selectedWord) { awardPoints(25); hangmanState.correctLetters = hangmanState.selectedWord.split(''); displayHangmanWord(); } else { playSound('wrong'); const n = hangmanState.teams.length > 1 ? hangmanState.teams[hangmanState.currentTeamIndex].name : 'Du hast'; hangmanMessageEl.textContent = `${n} falsch geraten!`; changeTurn(); } closeModal(guessWordModal); }
@@ -470,134 +490,28 @@
         if (guessWordInput) guessWordInput.addEventListener('keyup', (e) => { if(e.key === 'Enter') handleWordGuess(); }); 
         if (nextRoundBtn) nextRoundBtn.addEventListener('click', ()=>{playSound('click'); startNewHangmanRound()}); 
         
-        // --- QR Code Word Entry Logic ---
-        if (customWordBtn) customWordBtn.addEventListener('click', async () => {
-            if (!db) {
-                alert("Firebase ist nicht korrekt konfiguriert. Die QR-Code-Funktion ist deaktiviert.");
-                return;
+        if(directWordBtn) directWordBtn.addEventListener('click', () => openModal(directWordModal));
+        if(cancelDirectWordBtn) cancelDirectWordBtn.addEventListener('click', () => closeModal(directWordModal));
+        if(toggleWordVisibilityBtn) { toggleWordVisibilityBtn.addEventListener('mousedown', () => directWordInput.type = 'text'); toggleWordVisibilityBtn.addEventListener('mouseup', () => directWordInput.type = 'password'); toggleWordVisibilityBtn.addEventListener('mouseleave', () => directWordInput.type = 'password'); }
+        if(startDirectWordGameBtn) startDirectWordGameBtn.addEventListener('click', () => {
+            const word = directWordInput.value.trim().toUpperCase();
+            if (word) {
+                closeModal(directWordModal);
+                directWordInput.value = '';
+                startHangmanGame([word]);
+            } else {
+                alert("Bitte ein Wort eingeben.");
             }
-            const baseURL = "https://ashwin-1114.github.io/UnterrichtTool/index.html";
-
-            playSound('click');
-            const sessionId = "hangman_" + Math.random().toString(36).substring(2, 10);
-            const sessionDocRef = doc(db, "sessions", sessionId);
-            await setDoc(sessionDocRef, { createdAt: new Date() });
-            
-            const url = baseURL.split('?')[0] + `?session=${sessionId}`;
-            qrCodeContainer.innerHTML = '';
-            qrCode = new QRCode(qrCodeContainer, { text: url, width: 200, height: 200 });
-            qrStatus.textContent = "Warte auf Verbindung...";
-            openModal(qrCodeModal);
-
-            unsubscribe = onSnapshot(sessionDocRef, (doc) => {
-                if (doc.exists() && doc.data().words) {
-                    const words = doc.data().words;
-                    closeModal(qrCodeModal);
-                    startHangmanGame(words);
-                    if(unsubscribe) unsubscribe();
-                    deleteDoc(sessionDocRef);
-                }
-            });
         });
+
+        if (customWordBtn) customWordBtn.addEventListener('click', async () => { if (!db) { alert("Firebase ist nicht korrekt konfiguriert."); return; } const baseURL = "https://ashwin-1114.github.io/UnterrichtTool/index.html"; playSound('click'); const sessionId = "hangman_" + Math.random().toString(36).substring(2, 10); const sessionDocRef = doc(db, "sessions", sessionId); await setDoc(sessionDocRef, { createdAt: new Date() }); const url = baseURL.split('?')[0] + `?session=${sessionId}`; qrCodeContainer.innerHTML = ''; qrCode = new QRCode(qrCodeContainer, { text: url, width: 200, height: 200 }); qrStatus.textContent = "Warte auf Verbindung..."; openModal(qrCodeModal); unsubscribe = onSnapshot(sessionDocRef, (doc) => { if (doc.exists() && doc.data().words) { const words = doc.data().words; closeModal(qrCodeModal); startHangmanGame(words); if(unsubscribe) unsubscribe(); deleteDoc(sessionDocRef); } }); });
         if (cancelQrBtn) cancelQrBtn.addEventListener('click', () => { if (unsubscribe) unsubscribe(); closeModal(qrCodeModal); });
-
-
-        // --- ARTICLE GUESSER GAME ---
-        const articleGame = document.getElementById('article-game'), articleTopicInput = document.getElementById('article-topic-input'), articleGenerateBtn = document.getElementById('article-generate-btn'), articleGenerateBtnText = document.getElementById('article-generate-btn-text'), articleGenerateSpinner = document.getElementById('article-generate-spinner'), articleWordDisplay = document.getElementById('article-word-display'), articleChoices = document.getElementById('article-choices'), articleScoreCorrect = document.getElementById('article-score-correct'), articleScoreWrong = document.getElementById('article-score-wrong'), articleGameMessage = document.getElementById('article-game-message');
-        let articleGameState = {};
-        function resetArticleGameState() { articleGameState = { wordList: [], currentWordIndex: 0, correct: 0, wrong: 0 }; }
-        async function startArticleGame() { playSound('click'); const topic = articleTopicInput.value.trim(); if (!topic) { alert("Bitte Thema eingeben."); return; } articleGame.classList.add('opacity-25', 'pointer-events-none'); const prompt = `Generate 10 German nouns with their article (DER, DIE, DAS) for topic '${topic}'. Return ONLY a comma-separated list. Example: DER HUND,DIE KATZE,DAS HAUS`; const text = await callGenerativeAI(prompt, articleGenerateBtn, articleGenerateSpinner, articleGenerateBtnText, articleGameMessage); if (text) { const words = text.split(',').map(p => { const parts = p.trim().toUpperCase().split(' '); if (parts.length === 2 && ['DER', 'DIE', 'DAS'].includes(parts[0])) { return { article: parts[0], noun: parts[1] }; } return null; }).filter(Boolean); if(words.length === 0) { articleGameMessage.textContent = 'Fehler: KI konnte keine Wörter generieren.'; articleGenerateBtnText.textContent = 'START'; return; } resetArticleGameState(); articleGameState.wordList = shuffleArray(words); articleGame.classList.remove('opacity-25', 'pointer-events-none'); nextArticleWord(); } articleGenerateBtnText.textContent = 'START'; }
-        function nextArticleWord() { if (articleGameState.currentWordIndex >= articleGameState.wordList.length) { articleWordDisplay.innerHTML = `<span class="text-2xl text-yellow-300">SPIELENDE!</span>`; articleGameMessage.textContent = `Endstand: ${articleGameState.correct} Richtig, ${articleGameState.wrong} Falsch.`; articleChoices.classList.add('hidden'); return; } articleGameMessage.textContent = `Wort ${articleGameState.currentWordIndex + 1} / ${articleGameState.wordList.length}`; const current = articleGameState.wordList[articleGameState.currentWordIndex]; articleWordDisplay.textContent = current.noun; articleScoreCorrect.textContent = articleGameState.correct; articleScoreWrong.textContent = articleGameState.wrong; articleChoices.classList.remove('hidden'); articleChoices.querySelectorAll('.article-btn').forEach(btn => btn.disabled = false); }
-        if (articleChoices) articleChoices.addEventListener('click', (e) => { if (!e.target.matches('.article-btn')) return; articleChoices.querySelectorAll('.article-btn').forEach(btn => btn.disabled = true); const chosen = e.target.dataset.article, correct = articleGameState.wordList[articleGameState.currentWordIndex].article; if (chosen === correct) { playSound('correct'); articleGameState.correct++; articleGameMessage.innerHTML = `<span class="text-cyan-400">Richtig!</span>`; } else { playSound('wrong'); articleGameState.wrong++; articleGameMessage.innerHTML = `<span class="text-red-400">Falsch!</span> Richtig: ${correct} ${articleGameState.wordList[articleGameState.currentWordIndex].noun}`; } articleGameState.currentWordIndex++; setTimeout(nextArticleWord, 1500); });
-        if (articleGenerateBtn) articleGenerateBtn.addEventListener('click', startArticleGame);
-
-        // --- KI-QUIZ GAME ---
-        const quizGame = document.getElementById('quiz-game'), quizTopicInput = document.getElementById('quiz-topic-input'), quizGenerateBtn = document.getElementById('quiz-generate-btn'), quizGenerateBtnText = document.getElementById('quiz-generate-btn-text'), quizGenerateSpinner = document.getElementById('quiz-generate-spinner'), quizProgress = document.getElementById('quiz-progress'), quizQuestion = document.getElementById('quiz-question'), quizOptions = document.getElementById('quiz-options'), quizMessage = document.getElementById('quiz-message'), quizScoreCorrect = document.getElementById('quiz-score-correct'), quizScoreWrong = document.getElementById('quiz-score-wrong'), quizNextBtn = document.getElementById('quiz-next-btn');
-        let quizState = {};
-        function resetQuizState() { quizState = { questions: [], currentQuestionIndex: 0, correct: 0, wrong: 0, }; }
-        async function startQuizGame() { 
-            playSound('click'); 
-            const topic = quizTopicInput.value.trim();
-            if (!topic) { 
-                alert("Bitte Thema eingeben."); 
-                return; 
-            } 
-            quizGame.classList.add('opacity-25', 'pointer-events-none'); 
-            const prompt = `Generate 5 multiple-choice questions about '${topic}'. Format as a valid JSON array of objects. Each object must have "question" (string), "options" (array of 4 strings), and "correctAnswer" (string matching an option). Example: [{"question": "Hauptstadt von Deutschland?", "options": ["München", "Hamburg", "Berlin", "Köln"], "correctAnswer": "Berlin"}]`; 
-            const text = await callGenerativeAI(prompt, quizGenerateBtn, quizGenerateSpinner, quizGenerateBtnText, quizMessage); 
-            if (text) { 
-                try { 
-                    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim(); 
-                    const questions = JSON.parse(cleaned); 
-                    if (!Array.isArray(questions) || questions.length === 0 || !questions[0].question) { 
-                        throw new Error("Invalid AI format."); 
-                    } 
-                    resetQuizState(); 
-                    quizState.questions = shuffleArray(questions); 
-                    quizGame.classList.remove('opacity-25', 'pointer-events-none'); 
-                    displayNextQuestion(); 
-                } catch(e) { 
-                    console.error("Quiz JSON Parse Error:", e); 
-                    quizMessage.textContent = 'Fehler: Ungültiges Format von KI.'; 
-                } 
-            } 
-            quizGenerateBtnText.textContent = 'START'; 
-        }
-        function displayNextQuestion() { 
-            quizMessage.textContent = ''; 
-            quizNextBtn.classList.add('hidden'); 
-            quizOptions.innerHTML = ''; 
-            if (quizState.currentQuestionIndex >= quizState.questions.length) { 
-                quizQuestion.innerHTML = `<span class="text-2xl text-yellow-300">SPIELENDE!</span>`; 
-                quizMessage.textContent = `Endstand: ${quizState.correct} Richtig, ${quizState.wrong} Falsch.`; 
-                quizProgress.textContent = ''; 
-                return; 
-            } 
-            const q = quizState.questions[quizState.currentQuestionIndex]; 
-            quizProgress.textContent = `Frage ${quizState.currentQuestionIndex + 1} / ${quizState.questions.length}`; 
-            quizQuestion.textContent = q.question; 
-            shuffleArray(q.options).forEach(opt => { 
-                const btn = document.createElement('button'); 
-                btn.textContent = opt; 
-                btn.classList.add('pixel-btn', 'p-4', 'text-sm', 'w-full', 'quiz-option-btn'); 
-                btn.addEventListener('click', () => handleQuizAnswer(btn, opt, q.correctAnswer)); 
-                quizOptions.appendChild(btn); 
-            }); 
-            quizScoreCorrect.textContent = quizState.correct; 
-            quizScoreWrong.textContent = quizState.wrong; 
-        }
-        function handleQuizAnswer(btn, selected, correct) { 
-            quizOptions.querySelectorAll('.quiz-option-btn').forEach(b => b.disabled = true); 
-            quizNextBtn.classList.remove('hidden'); 
-            if (selected === correct) { 
-                playSound('correct'); 
-                quizState.correct++; 
-                quizMessage.innerHTML = `<span class="text-cyan-400">Richtig!</span>`; 
-                btn.classList.remove('pixel-btn'); 
-                btn.classList.add('pixel-btn-green'); 
-            } else { 
-                playSound('wrong'); 
-                quizState.wrong++; 
-                quizMessage.innerHTML = `<span class="text-red-400">Falsch!</span> Richtig: ${correct}`; 
-                btn.classList.remove('pixel-btn'); 
-                btn.classList.add('pixel-btn-red'); 
-                quizOptions.querySelectorAll('.quiz-option-btn').forEach(b => { 
-                    if (b.textContent === correct) { 
-                        b.classList.remove('pixel-btn'); 
-                        b.classList.add('pixel-btn-green'); 
-                    } 
-                }); 
-            } 
-            quizState.currentQuestionIndex++; 
-        }
-        if (quizGenerateBtn) quizGenerateBtn.addEventListener('click', startQuizGame);
-        if (quizNextBtn) quizNextBtn.addEventListener('click', () => { playSound('click'); displayNextQuestion(); });
         
         // --- App Initializer and View Router ---
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const sessionId = urlParams.get('session');
-
+            
             if (sessionId && db) {
                 // This is the remote control view
                 document.getElementById('main-app-container').classList.add('hidden');
@@ -610,19 +524,9 @@
 
                 sendWordsBtn.addEventListener('click', async () => {
                     const wordsText = wordListInput.value.trim();
-                    if (!wordsText) {
-                        remoteStatus.textContent = "Bitte Wörter eingeben.";
-                        return;
-                    }
-                    const words = wordsText.split(/[\n,]+/)
-                        .map(w => w.trim().toUpperCase())
-                        .filter(w => w.length > 0);
-                    
-                    if (words.length === 0) {
-                        remoteStatus.textContent = "Keine gültigen Wörter gefunden.";
-                        return;
-                    }
-                    
+                    if (!wordsText) { remoteStatus.textContent = "Bitte Wörter eingeben."; return; }
+                    const words = wordsText.split(/[\n,]+/).map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+                    if (words.length === 0) { remoteStatus.textContent = "Keine gültigen Wörter gefunden."; return; }
                     sendWordsBtn.disabled = true;
                     remoteStatus.textContent = "Sende...";
                     try {
@@ -638,9 +542,8 @@
                 });
             } else {
                 // This is the main app view
-                resetHangmanState(); 
-                resetArticleGameState(); 
-                resetQuizState(); 
+                if(starfieldCanvas) { resizeStarfield(); createStars(); drawStars(); }
+                resetHangmanState();
                 loadData(); 
             }
         });
